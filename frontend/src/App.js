@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TextField, IconButton } from '@mui/material'; // Importing TextField and IconButton from Material UI
 import SearchIcon from '@mui/icons-material/Search'; // Importing the Search icon
+import HelloWorld from './HelloWorld';
 import './App.css';
 
 function App() {
@@ -28,7 +29,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        {/* Material UI Search bar */}
+        <HelloWorld />
         <TextField
           type="text"
           value={query}
