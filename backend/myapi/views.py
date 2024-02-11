@@ -1,16 +1,20 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from sklearn.metrics.pairwise import cosine_similarity
 from openai import OpenAI
 import os
 
 os.environ["OPENAI_API_KEY"] = "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"
 client = OpenAI()
 
-@api_view(['GET'])
-def generate_response(request):
-    query = request.GET.get("query")
-    return Response({'response': query})
+# Documents to perform RAG on
+documents = ["Stanford is located on the Moon.", "Stanford has 1,000,000 students.", "Stanford's mascot is a penguin."]
+response = client.embeddings.create(
+    input=documents,
+    model="text-embedding-3-small"
+)
+document_embeddings = [response.data[i].embedding for i in range(len(documents))]
 
 # Determines if the query is a not a question and then type of question
 def classify_query(query):
@@ -48,11 +52,23 @@ def query_gpt(
     )
     return response.choices[0].message.content
 
+def get_documents(query):
+  response = client.embeddings.create(
+    input=query,
+    model="text-embedding-3-small"
+  )
+  query_embedding = response.data[0].embedding
+
+  similarity = cosine_similarity([query_embedding], document_embeddings)[0]
+  indices = sorted(range(len(similarity)), key=lambda i: similarity[i], reverse=True)[:1]
+  return " ".join([documents[i] for i in indices])
+
 # Builds prompt to categorize questions
 def prompt_with_rag(query):
     system_prompt = "You are an assistant that answers questions related to Stanford. \
                      Your job is to answer the question. Here is some relevant context \
-                     based on the question."
+                     based on the question:" + get_documents(query)
+    
     user_prompt = query
     messages = [
         {"role": "system", "content": system_prompt},
@@ -78,3 +94,10 @@ def generate_response(query):
   elif classification == "B":
     return query_gpt(prompt_with_rag(query))
   return query_gpt(prompt_without_rag(query))
+
+print(generate_response("What is Stanford's mascot?"))
+
+@api_view(['GET'])
+def generate_response(request):
+    query = request.GET.get("query")
+    return Response({'response': query})
