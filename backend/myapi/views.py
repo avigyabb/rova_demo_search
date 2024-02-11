@@ -87,7 +87,7 @@ def prompt_without_rag(query):
     return messages
 
 # Function to generate a response using OpenAI's ChatCompletion API
-def generate_response(query):
+def get_response(query):
   classification = classify_query(query)
   if classification == "A":
     return "Please ask a question."
@@ -95,9 +95,8 @@ def generate_response(query):
     return query_gpt(prompt_with_rag(query))
   return query_gpt(prompt_without_rag(query))
 
-print(generate_response("What is Stanford's mascot?"))
-
 @api_view(['GET'])
 def generate_response(request):
-    query = request.GET.get("query")
-    return Response({'response': query})
+    query = request.query_params.get('query')
+    response = get_response(query)
+    return Response({'response': response})
