@@ -1,6 +1,12 @@
-/* App.css */
-
-.App {
-  text-align: center;
-  padding-top: 50px; /* Adjust the padding to move the search bar higher */
+.content {
+  padding: 20px;
 }
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 10px;
+}
+
+/* Add any additional styling you need here */
