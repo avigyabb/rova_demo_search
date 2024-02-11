@@ -5,15 +5,31 @@ import ThumbDownAltIcon from '@mui/icons-material/ThumbDownAlt';
 import CommentIcon from '@mui/icons-material/Comment';
 import DownloadIcon from '@mui/icons-material/Download'; // Import the Download icon
 import './App.css';
+import axios from 'axios';
 
 function App() {
   const [query, setQuery] = useState('');
   const [responses, setResponses] = useState([]);
+  const [newResponse, setNewResponse] = useState('');
+
+  const fetchData = async () =>  {
+    try {
+      const params = {
+        query: query
+      };
+      const response = await axios.get('generate-response/', { params });
+      setNewResponse(response.data.response);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+   
 
   const handleSearch = async () => {
-    const aiResponse = await getAIResponse(query);
+    console.log(query)
+    fetchData();
     // Prepend new response and keep only the 5 most recent responses
-    setResponses(prevResponses => [{ query, aiResponse }, ...prevResponses.slice(0, 0)]);
+    setResponses(prevResponses => [{ query, newResponse }, ...prevResponses.slice(0, 0)]);
   };
 
   return (
@@ -42,11 +58,6 @@ function App() {
       </div>
     </Container>
   );
-}
-
-async function getAIResponse(query) {
-  // Placeholder for AI response logic
-  return `Response to "${query}"`;
 }
 
 export default App;
