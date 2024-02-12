@@ -100,3 +100,18 @@ def generate_response(request):
     query = request.query_params.get('query')
     response = get_response(query)
     return Response({'response': response})
+
+@api_view(["POST"])
+def post_like(request):
+    print("like")
+    return Response({"message": "Received like."})
+
+@api_view(["POST"])
+def post_dislike(request):
+    print("dislike")
+    return Response({"message": "Received dislike."})
+
+@api_view(["POST"])
+def post_copy(request):
+    print("copy")
+    return Response({"message": "Received copy."})
