@@ -3,6 +3,7 @@ import { Container, TextField, Button, Card, CardContent, IconButton, Typography
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import ThumbDownAltIcon from '@mui/icons-material/ThumbDownAlt';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import './App.css';
 import axios from 'axios';
 
@@ -64,6 +65,28 @@ function App() {
     }
   };
 
+  const handleRegenerate = async () => {
+    try {
+      const response = await axios.post('http://localhost:8000/regenerate/');
+      console.log(response)
+    } catch (error) {
+      console.error(error);
+    }
+
+    try {
+      setLoading(true); // Set loading to true when fetching data
+      const params = {
+        query: responses[0].query
+      };
+      const response = await axios.get('http://localhost:8000/generate-response/', { params });
+      setResponses(prevResponses => [{"query": responses[0].query, "response": response.data.response }, ...prevResponses]);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false); // Set loading to false when data fetching is complete
+    }
+  };
+
   const handleUpgradePlan = async () => {
     try {
       const response = await axios.post('http://localhost:8000/upgrade/');
@@ -88,6 +111,7 @@ function App() {
               <IconButton aria-label="like" onClick={handleLike} style={{ color: liked ? 'blue' : 'inherit' }}><ThumbUpAltIcon /></IconButton>
               <IconButton aria-label="dislike" onClick={handleDislike} style={{ color: disliked ? 'red' : 'inherit' }}><ThumbDownAltIcon /></IconButton>
               <IconButton aria-label="copy" onClick={handleCopy}><ContentCopyIcon/></IconButton>
+              <IconButton aria-label="copy" onClick={handleRegenerate}><RefreshIcon/></IconButton>
             </Box>
           </CardContent>
           </Card>

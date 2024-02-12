@@ -7,4 +7,5 @@ urlpatterns = [
     path('like/', views.post_like, name='like'),
     path('dislike/', views.post_dislike, name='dislike'),
     path('upgrade/', views.post_upgrade, name='upgrade'),
+    path('regenerate/', views.post_regenerate, name='regenerate'),
 ]

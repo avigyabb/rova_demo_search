@@ -43,7 +43,7 @@ def classify_query(query):
 def query_gpt(
     msg_arr,
     model="gpt-4-turbo-preview",
-    temperature=0.0,
+    temperature=1.0,
     max_tokens=128,
 ):
     response = client.chat.completions.create(
@@ -127,14 +127,23 @@ def post_like(request):
 @api_view(["POST"])
 def post_dislike(request):
     data = [{"event_name": "dislike", "event_type": "product", "properties": {'user_id':'user_1'}}]
+    rova_client.capture(data)
     return Response({"message": "Received dislike."})
 
 @api_view(["POST"])
 def post_copy(request):
     data = [{"event_name": "copy", "event_type": "product", "properties": {'user_id':'user_1'}}]
+    rova_client.capture(data)
     return Response({"message": "Received copy."})
 
 @api_view(["POST"])
 def post_upgrade(request):
     data = [{"event_name": "upgrade_plan", "event_type": "product", "properties": {'user_id':'user_1'}}]
+    rova_client.capture(data)
     return Response({"message": "Received upgrade."})
+
+@api_view(["POST"])
+def post_regenerate(request):
+    data = [{"event_name": "regenerate_response", "event_type": "product", "properties": {'user_id':'user_1'}}]
+    rova_client.capture(data)
+    return Response({"message": "Received regenerate."})
