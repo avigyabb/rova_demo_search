@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, TextField, Button, Card, CardContent, IconButton, Typography, Box } from '@mui/material';
+import { Container, TextField, Button, Card, CardContent, IconButton, Typography, Box, CircularProgress } from '@mui/material';
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import ThumbDownAltIcon from '@mui/icons-material/ThumbDownAlt';
 import CommentIcon from '@mui/icons-material/Comment';
@@ -11,33 +11,36 @@ function App() {
   const [query, setQuery] = useState('');
   const [responses, setResponses] = useState([]);
   const [newResponse, setNewResponse] = useState('');
+  const [loading, setLoading] = useState(false); // State to track loading status
 
   const fetchData = async () =>  {
     try {
+      setLoading(true); // Set loading to true when fetching data
       const params = {
         query: query
       };
       const response = await axios.get('http://localhost:8000/generate-response/', { params });
-      setNewResponse(response.data.response);
+      setResponses(prevResponses => [{"query": query, "response": response.data.response }, ...prevResponses.slice(0, 4)]);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false); // Set loading to false when data fetching is complete
     }
   }; 
 
   const handleSearch = async () => { 
-    console.log(query)
     fetchData();
-    // Prepend new response and keep only the 5 most recent responses
-    setResponses(prevResponses => [{ query, newResponse }, ...prevResponses.slice(0, 0)]);
+    console.log(responses);
   };
 
   return (
-    <Container maxWidth="sm" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '90vh' }}>
-      {responses.map((response, index) => (
-        <Card key={index} className="response-card" style={{ marginTop: '50px', height: '65vh'}}>
-          <CardContent style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '95%' }}>
-            <Typography variant="body1">{newResponse}</Typography>
-            <Typography variant="body2" style={{ marginTop: '10px', marginBottom: '10px' }}>{response.citation}</Typography>
+    <Container maxWidth="sm" style={{ height: '90vh', overflowY: 'scroll' }}>
+      <div className="response-list">
+        {responses.map((response, index) => (
+          <Card key={index} className="response-card">
+            <CardContent style={{ paddingBottom: 0 }}>
+            <Typography variant="body1">{response.query}</Typography>
+            <Typography variant="body2" style={{ marginTop: '10px', marginBottom: '10px' }}>{response.response}</Typography>
             {/* Actions are now wrapped in a Box for alignment */}
             <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '10px' }}>
               <IconButton aria-label="like"><ThumbUpAltIcon /></IconButton>
@@ -48,12 +51,17 @@ function App() {
               </IconButton>
             </Box>
           </CardContent>
+          </Card>
+        ))}
+      </div>
+      {loading && ( // Render loading icon if loading is true
+        <Card>
+        <CircularProgress style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
         </Card>
-      ))}
-      {/* Adjust the search container to display elements inline */}
-      <div className="search-container" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 'auto', marginBottom: '20px'}}>
-        <TextField label="Ask me anything..." fullWidth value={query} onChange={(e) => setQuery(e.target.value)} />
-        <Button variant="contained" color="primary" onClick={handleSearch}>Search</Button>
+      )}
+      <div className="search-container" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '20px', marginBottom: '20px'}}>
+      <TextField label="Ask me anything..." fullWidth value={query} onChange={(e) => setQuery(e.target.value)} />
+      <Button variant="contained" color="primary" onClick={handleSearch}>Search</Button>
       </div>
     </Container>
   );
