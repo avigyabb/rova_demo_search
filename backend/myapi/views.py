@@ -4,9 +4,11 @@ from rest_framework.response import Response
 from sklearn.metrics.pairwise import cosine_similarity
 from openai import OpenAI
 import os
+from rova_client import Rova
 
 os.environ["OPENAI_API_KEY"] = "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"
 client = OpenAI()
+rova_client = Rova('rova_dev')
 
 # Documents to perform RAG on
 documents = ["Stanford is located on the Moon.", "Stanford has 1,000,000 students.", "Stanford's mascot is a penguin."]
@@ -33,6 +35,8 @@ def classify_query(query):
     ]
     
     response = query_gpt(messages)
+    data = [{"event_name": "classify_intent", "event_type": "llm", "properties": {"input_content":str(messages), "output_content":str(response), 'user_id':'user_1'}}]
+    rova_client.capture(data)
     return response
 
 def query_gpt(
@@ -61,7 +65,11 @@ def get_documents(query):
 
   similarity = cosine_similarity([query_embedding], document_embeddings)[0]
   indices = sorted(range(len(similarity)), key=lambda i: similarity[i], reverse=True)[:1]
-  return " ".join([documents[i] for i in indices])
+  output = " ".join([documents[i] for i in indices])
+  ## capture here
+  data = [{"event_name": "retrieve_documents", "event_type": "llm", "properties": {"input_content":str(query), "output_content":str(output), 'user_id':'user_1'}}]
+  rova_client.capture(data)
+  return output
 
 # Builds prompt to categorize questions
 def prompt_with_rag(query):
@@ -89,11 +97,19 @@ def prompt_without_rag(query):
 # Function to generate a response using OpenAI's ChatCompletion API
 def get_response(query):
   classification = classify_query(query)
+  messages = []
   if classification == "A":
-    return "Please ask a question."
+    output = "Please ask a question."
   elif classification == "B":
-    return query_gpt(prompt_with_rag(query))
-  return query_gpt(prompt_without_rag(query))
+    messages = prompt_with_rag(query)
+    output = query_gpt(messages)
+  else:
+    messages = prompt_without_rag(query)
+    output = query_gpt(messages)
+  ## capture here
+  data = [{"event_name": "output_response", "event_type": "llm", "properties": {"input_content":str(messages), "output_content":str(output), 'user_id':'user_1'}}]
+  rova_client.capture(data)
+  return output
 
 @api_view(['GET'])
 def generate_response(request):

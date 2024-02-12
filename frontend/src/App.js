@@ -20,17 +20,16 @@ function App() {
         query: query
       };
       const response = await axios.get('http://localhost:8000/generate-response/', { params });
-      setResponses(prevResponses => [{"query": query, "response": response.data.response }, ...prevResponses.slice(0, 4)]);
+      setResponses(prevResponses => [{"query": query, "response": response.data.response }, ...prevResponses]);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false); // Set loading to false when data fetching is complete
     }
-  }; 
+  };
 
   const handleSearch = async () => { 
     fetchData();
-    console.log(responses);
   };
 
   const handleLike = async () => {
@@ -66,14 +65,13 @@ function App() {
   };
 
   return (
-    <Container maxWidth="sm" style={{ height: '90vh', overflowY: 'scroll' }}>
+    <Container style={{ marginTop: '2%', width: '60%', height: '90vh', overflowY: 'scroll' }}>
       <div className="response-list">
-        {responses.map((response, index) => (
-          <Card key={index} className="response-card">
+        {responses.length > 0 && (
+          <Card className="response-card" style={{ height:'100%',width: '100%', overflowY:'scroll'}}>
             <CardContent style={{ paddingBottom: 0 }}>
-            <Typography variant="body1">{response.query}</Typography>
-            <Typography variant="body2" style={{ marginTop: '10px', marginBottom: '10px' }}>{response.response}</Typography>
-            {/* Actions are now wrapped in a Box for alignment */}
+            <Typography variant="body1">{responses[0].query}</Typography>
+            <Typography variant="body2" style={{ marginTop: '10px', marginBottom: '10px' }}>{responses[0].response}</Typography>
             <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '10px' }}>
               <IconButton aria-label="like" onClick={handleLike} style={{ color: liked ? 'blue' : 'inherit' }}><ThumbUpAltIcon /></IconButton>
               <IconButton aria-label="dislike" onClick={handleDislike} style={{ color: disliked ? 'red' : 'inherit' }}><ThumbDownAltIcon /></IconButton>
@@ -81,9 +79,9 @@ function App() {
             </Box>
           </CardContent>
           </Card>
-        ))}
+        )}
       </div>
-      {loading && ( // Render loading icon if loading is true
+      {loading && (
         <Card>
         <CircularProgress style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
         </Card>
