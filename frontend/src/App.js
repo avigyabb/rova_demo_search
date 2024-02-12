@@ -64,8 +64,20 @@ function App() {
     }
   };
 
+  const handleUpgradePlan = async () => {
+    try {
+      const response = await axios.post('http://localhost:8000/upgrade/');
+      console.log(response)
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <Container style={{ marginTop: '2%', width: '60%', height: '90vh', overflowY: 'scroll' }}>
+      <Box style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+        <Button variant="outlined" color="primary" onClick={handleUpgradePlan}>Upgrade Plan</Button>
+      </Box>
       <div className="response-list">
         {responses.length > 0 && (
           <Card className="response-card" style={{ height:'100%',width: '100%', overflowY:'scroll'}}>

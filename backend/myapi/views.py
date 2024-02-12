@@ -120,19 +120,21 @@ def generate_response(request):
 
 @api_view(["POST"])
 def post_like(request):
-    print("like")
     data = [{"event_name": "like", "event_type": "product", "properties": {'user_id':'user_1'}}]
     rova_client.capture(data)
     return Response({"message": "Received like."})
 
 @api_view(["POST"])
 def post_dislike(request):
-    print("dislike")
     data = [{"event_name": "dislike", "event_type": "product", "properties": {'user_id':'user_1'}}]
     return Response({"message": "Received dislike."})
 
 @api_view(["POST"])
 def post_copy(request):
-    print("copy")
     data = [{"event_name": "copy", "event_type": "product", "properties": {'user_id':'user_1'}}]
     return Response({"message": "Received copy."})
+
+@api_view(["POST"])
+def post_upgrade(request):
+    data = [{"event_name": "upgrade_plan", "event_type": "product", "properties": {'user_id':'user_1'}}]
+    return Response({"message": "Received upgrade."})

@@ -6,4 +6,5 @@ urlpatterns = [
     path('copy/', views.post_copy, name='post_copy'),
     path('like/', views.post_like, name='like'),
     path('dislike/', views.post_dislike, name='dislike'),
+    path('upgrade/', views.post_upgrade, name='upgrade'),
 ]
