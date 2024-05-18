@@ -1,14 +1,61 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from sklearn.metrics.pairwise import cosine_similarity
 from openai import OpenAI
 import os
-import random
 import chromadb
 
+# Initialize ChromaDB Client
+chroma_client = chromadb.PersistentClient(path="/tmp/chroma")
+try:
+    collection = chroma_client.get_collection(name="grant_docs")
+except:
+    collection = chroma_client.create_collection(name="grant_docs")
+
+# OpenAI Client
 os.environ["OPENAI_API_KEY"] = "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"
 client = OpenAI()
+
+# OpenAI Embeddings 
+def get_openai_embeddings(texts):
+    response = client.embeddings.create(input=texts, model="text-embedding-ada-002")
+    embeddings = [data.embedding for data in response.data]
+    return embeddings
+
+def store_document_in_chromadb(documents):
+    embeddings = get_openai_embeddings([doc['content'] for doc in documents])
+    ids = [str(doc['id']) for doc in documents]
+    contents = [doc['content'] for doc in documents]
+
+    collection.upsert(
+        ids=ids,
+        embeddings=embeddings,
+        documents=contents,
+    )
+
+# # Test storing a document in chromadb
+# store_document_in_chromadb([
+#     {
+#         "id": 1,
+#         "content": "Lebron James is the greatest basketball player ever",
+#     }, 
+#     {
+#         "id": 2,
+#         "content": "Stanford is the best university in the world",
+#     },
+#     {
+#         "id": 3,
+#         "content": "Rova AI is now called Ambora Labs",
+#     },
+# ])
+
+# Retrieve similar documents
+def retrieve_similar_documents(query, n_results=2):
+    query_embedding = get_openai_embeddings([query])[0]
+    results = collection.query(query_embedding, n_results=n_results)
+    return results['documents'][0]
+
+# print(retrieve_similar_documents("Tell me about Rova AI"))
 
 def query_gpt(
     msg_arr,
@@ -27,27 +74,29 @@ def query_gpt(
     )
     return response.choices[0].message.content
 
-# Builds prompt to categorize questions
-def prompt_without_rag(query):
-    system_prompt = ""
-    user_prompt = query
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt},
-    ]
-    return messages
-
 # Function to generate a response using OpenAI's ChatCompletion API
 def get_response(query):
-  messages = prompt_without_rag(query)
-  output = query_gpt(messages)
-  return output
+    similar_docs = retrieve_similar_documents(query)
+    context = " ".join(similar_docs)
+    messages = prompt_with_rag(query, context)
+    output = query_gpt(messages)
+    return output
+
+def prompt_with_rag(query, context):
+    system_prompt = "Use the following context to answer the user's query:"
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": context},
+        {"role": "user", "content": query},
+    ]
+    return messages
 
 @api_view(['GET'])
 def generate_response(request):
     query = request.query_params.get('query')
     response = get_response(query)
     return Response({'response': response})
+
 
 @api_view(["POST"])
 def post_like(request):
