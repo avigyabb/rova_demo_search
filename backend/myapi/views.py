@@ -4,12 +4,11 @@ from rest_framework.response import Response
 from sklearn.metrics.pairwise import cosine_similarity
 from openai import OpenAI
 import os
-from rova_client import Rova
 import random
+import chromadb
 
 os.environ["OPENAI_API_KEY"] = "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"
 client = OpenAI()
-rova_client = Rova('rova_dev')
 
 # Documents to perform RAG on
 documents = ["Stanford is located on the Moon.", "Stanford has 1,000,000 students.", "Stanford's mascot is a penguin."]
@@ -36,8 +35,6 @@ def classify_query(query):
     ]
     
     response = query_gpt(messages)
-    data = [{"event_name": "classify_intent", "event_type": "llm", "properties": {"input_content":str(messages), "output_content":str(response), 'latency': random.uniform(0.0, 1.0), 'cost': random.uniform(0.0, 1.0), 'user_id':'user_1'}}]
-    rova_client.capture(data)
     return response
 
 def query_gpt(
@@ -67,9 +64,6 @@ def get_documents(query):
   similarity = cosine_similarity([query_embedding], document_embeddings)[0]
   indices = sorted(range(len(similarity)), key=lambda i: similarity[i], reverse=True)[:1]
   output = " ".join([documents[i] for i in indices])
-  ## capture here
-  data = [{"event_name": "retrieve_documents", "event_type": "llm", "properties": {"input_content":str(query), "output_content":str(output), 'latency': random.uniform(0.0, 1.0), 'cost': random.uniform(0.0, 1.0), 'user_id':'user_1'}}]
-  rova_client.capture(data)
   return output
 
 # Builds prompt to categorize questions
@@ -107,9 +101,6 @@ def get_response(query):
   else:
     messages = prompt_without_rag(query)
     output = query_gpt(messages)
-  ## capture here
-  data = [{"event_name": "output_response", "event_type": "llm", "properties": {"input_content":str(messages), "output_content":str(output), 'latency': random.uniform(0.0, 1.0), 'cost': random.uniform(0.0, 1.0), 'user_id':'user_1'}}]
-  rova_client.capture(data)
   return output
 
 @api_view(['GET'])
@@ -120,30 +111,20 @@ def generate_response(request):
 
 @api_view(["POST"])
 def post_like(request):
-    data = [{"event_name": "like", "event_type": "product", "properties": {'user_id':'user_1'}}]
-    rova_client.capture(data)
     return Response({"message": "Received like."})
 
 @api_view(["POST"])
 def post_dislike(request):
-    data = [{"event_name": "dislike", "event_type": "product", "properties": {'user_id':'user_1'}}]
-    rova_client.capture(data)
     return Response({"message": "Received dislike."})
 
 @api_view(["POST"])
 def post_copy(request):
-    data = [{"event_name": "copy", "event_type": "product", "properties": {'user_id':'user_1'}}]
-    rova_client.capture(data)
     return Response({"message": "Received copy."})
 
 @api_view(["POST"])
 def post_upgrade(request):
-    data = [{"event_name": "upgrade_plan", "event_type": "product", "properties": {'user_id':'user_1'}}]
-    rova_client.capture(data)
     return Response({"message": "Received upgrade."})
 
 @api_view(["POST"])
 def post_regenerate(request):
-    data = [{"event_name": "regenerate_response", "event_type": "product", "properties": {'user_id':'user_1'}}]
-    rova_client.capture(data)
     return Response({"message": "Received regenerate."})
