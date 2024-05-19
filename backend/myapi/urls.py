@@ -1,11 +1,8 @@
-from django.urls import path, include
-from . import views
+from django.urls import path
+from .views import FileUploadView, FileDeleteView, FileListView
 
 urlpatterns = [
-    path('generate-response/', views.generate_response, name='generate_response'),
-    path('copy/', views.post_copy, name='post_copy'),
-    path('like/', views.post_like, name='like'),
-    path('dislike/', views.post_dislike, name='dislike'),
-    path('upgrade/', views.post_upgrade, name='upgrade'),
-    path('regenerate/', views.post_regenerate, name='regenerate'),
+    path('upload/<int:is_grantapp>/', FileUploadView.as_view(), name='file-upload'),
+    path('delete/<int:pk>/', FileDeleteView.as_view(), name='file-delete'),
+    path('files/', FileListView.as_view(), name='file-list'),
 ]
