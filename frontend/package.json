@@ -17,6 +17,7 @@
     "date-fns": "^3.3.1",
     "flowbite-react": "^0.7.2",
     "matter-js": "^0.19.0",
+    "posthog-js": "^1.131.4",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.0",
     "react-chartjs-2": "^5.2.0",

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, TextField, Button, Card, CardContent, IconButton, Typography, Box, CircularProgress } from '@mui/material';
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import ThumbDownAltIcon from '@mui/icons-material/ThumbDownAlt';
@@ -7,8 +7,14 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import FileUploadComponent from './Components/FileUpload';
 import './App.css';
 import axios from 'axios';
+import posthog from './posthog';
 
 function App() {
+  useEffect(() => {
+    // Automatically start session recording when the component mounts
+    posthog.capture('$pageview');
+  }, []);
+
   const [query, setQuery] = useState('');
   const [responses, setResponses] = useState([]);
   const [loading, setLoading] = useState(false); // State to track loading status
