@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
 import axios from 'axios';
+import "../Styles/Chat.css";
 
 export default function Chat() {
     const [inputValue, setInputValue] = useState("");
@@ -27,7 +28,7 @@ export default function Chat() {
 
     return (
         <div className = "container mx-auto">
-            <div className = "flex flex-col h-screen bg-gray-900" style = {{maxHeight: "85vh", backgroundColor: "#e9e9e9"}}>
+            <div className = "flex flex-col h-screen bg-gray-900" style = {{maxHeight: "100vh", backgroundColor: "#e9e9e9"}}>
                 <div className = "flex-grow p-6" style = {{overflowY: "auto"}}>
                     <div className = "flex flex-col space-y-4">
                         {
@@ -37,7 +38,7 @@ export default function Chat() {
                                     className = {`flex flex-col justify-start`}
                                     style = {{fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word'}}
                                 >
-                                    <div className={`${message.type === "user" ? 'blue' : 'gray'} rounded-lg p-2 shrink-0`}>
+                                    <div className={`chat ${message.type === "user" ? 'blue' : 'gray'} rounded-lg p-2`}>
                                         {message.type}
                                     </div>
                                     <div className = {`rounded-lg p-2`}>

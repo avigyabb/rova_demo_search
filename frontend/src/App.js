@@ -8,7 +8,7 @@ import FileUploadComponent from './Components/FileUpload';
 import './App.css';
 import axios from 'axios';
 import posthog from './posthog';
-import Chat from './Chat.js';
+import Chat from './Components/Chat.js';
 
 function App() {
   useEffect(() => {
@@ -107,7 +107,7 @@ function App() {
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
       <FileUploadComponent />
-      <div style={{ flex: 1, padding: '20px' }}>
+      <div style={{ flex: 1 }}>
         {/* Your main content goes here */}
         <Chat/>
       </div>

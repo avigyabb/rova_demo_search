@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/Chat.js",
+    "./src/Components/Chat.js",
   ],
   theme: {
     extend: {},
