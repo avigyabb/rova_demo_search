@@ -50,9 +50,7 @@ const FileUploadComponent = () => {
         console.log(result);
 
         // Add the uploaded file data to the state
-        if(!isGrantApp) {
-            setFiles((prevFiles) => [...prevFiles, result]);
-        }
+        setFiles((prevFiles) => [...prevFiles, result]);
         
       } catch (error) {
         console.error('Error uploading files:', error);

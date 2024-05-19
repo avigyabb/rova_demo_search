@@ -130,8 +130,8 @@ def extract_questions(pdf_path):
     END OF PDF \n, 
     generate a JSON output which contains a list of 'Question' objects.
     Each question should contain a 1) description of what the question is asking, 
-    2) any mention of word count limit or (None if no mention) and 
-    3) any mention of page limit (None if no mention). 
+    2) any mention of word count limit or (None if no mention), must be an integer, no text and 
+    3) any mention of page limit (None if no mention), must be an integer, no text. 
     Return a JSON object for all questions which require a essay or short-answer response. You should return a 
     list of objects ONLY for those questions which require an essay/short-answer response.
     Not for those which require factual details or few word responses. 
@@ -167,8 +167,8 @@ class FileUploadView(APIView):
 
         if(is_grantapp):
             questions = extract_questions(full_file_path)
-            parse_and_store_files([full_file_path], [uploaded_file.id])
-            return Response(questions, status=status.HTTP_201_CREATED)
+            #parse_and_store_files([full_file_path], [uploaded_file.id])
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
 
             parse_and_store_files([full_file_path], [uploaded_file.id])
@@ -181,7 +181,10 @@ class FileDeleteView(APIView):
 
         if os.path.exists(file_path):
             os.remove(file_path)
-        delete_from_chromadb([str(pk)])
+        try:
+            delete_from_chromadb([str(pk)])
+        except:
+            pass
 
         file.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
