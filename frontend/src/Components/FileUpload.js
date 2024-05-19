@@ -8,7 +8,7 @@ const FileUploadComponent = () => {
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        const response = await fetch('http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/files/');
+        const response = await fetch('http://localhost:8000/files/');
         const result = await response.json();
         setFiles(result);
       } catch (error) {
@@ -17,11 +17,11 @@ const FileUploadComponent = () => {
     };
 
     fetchFiles();
-  }, [files]);
+  }, []);
 
   const handleDelete = async (fileId) => {
     try {
-      const response = await fetch(`http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/delete/${fileId}/`, {
+      const response = await fetch(`http://localhost:8000/delete/${fileId}/`, {
         method: 'DELETE',
       });
       if (response.status === 204) {
@@ -42,7 +42,7 @@ const FileUploadComponent = () => {
       formData.append('file', file);
 
       try {
-        const response = await fetch(`http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/upload/${isGrantApp}/`, {
+        const response = await fetch(`http://localhost:8000/upload/${isGrantApp}/`, {
           method: 'POST',
           body: formData,
         });

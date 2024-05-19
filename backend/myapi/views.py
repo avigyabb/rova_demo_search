@@ -21,7 +21,7 @@ from langchain_community.embeddings import OllamaEmbeddings
 
 # Initialize the OpenAI client
 client = OpenAI(api_key='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') # this is for parsing templates, not used on actual data
-embeddings = OllamaEmbeddings(model="all-minilm", base_url="http://host.docker.internal:11434") # this is smallest model, probably not best for embeddings
+embeddings = OllamaEmbeddings(model="all-minilm") # this is smallest model, probably not best for embeddings
 
 # Initialize ChromaDB Client
 chroma_client = chromadb.PersistentClient(path="./chroma")
