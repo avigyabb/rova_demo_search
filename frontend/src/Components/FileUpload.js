@@ -17,7 +17,7 @@ const FileUploadComponent = () => {
     };
 
     fetchFiles();
-  }, []);
+  }, [files]);
 
   const handleDelete = async (fileId) => {
     try {
