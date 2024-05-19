@@ -16,6 +16,7 @@ import chromadb
 import PyPDF2
 import docx
 from time import sleep
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # Initialize the OpenAI client
 client = OpenAI(api_key='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')
@@ -27,6 +28,15 @@ try:
 except:
     collection = chroma_client.create_collection(name="grant_docs")
 
+# Initialize the text splitter with custom parameters
+custom_text_splitter = RecursiveCharacterTextSplitter(
+    # Set custom chunk size
+    chunk_size = 256,
+    chunk_overlap  = 16,
+    # Use length of the text as the size measure
+    length_function = len,
+    )
+
 # OpenAI Embeddings 
 def get_openai_embeddings(texts):
     response = client.embeddings.create(input=texts, model="text-embedding-ada-002")
@@ -36,7 +46,7 @@ def get_openai_embeddings(texts):
 # Function to store documents in ChromaDB
 def store_document_in_chromadb(documents):
     embeddings = get_openai_embeddings([doc['content'] for doc in documents])
-    ids = [str(doc['id']) for doc in documents]
+    ids = [doc['id'] for doc in documents]
     contents = [doc['content'] for doc in documents]
 
     collection.upsert(
@@ -64,8 +74,17 @@ def read_docx(file_path):
     return content
 
 # Function to delete from chroma db given id
-def delete_from_chromadb(ids):
-    collection.delete(ids=ids)
+def delete_from_chromadb(x):
+    # Retrieve all entries from the collection
+    all_entries = collection.get()  # Assuming collection.get() retrieves all entries
+    ids = all_entries['ids']
+    to_delete = [id for id in ids if id.split("_")[0].strip() in x]
+    collection.delete(ids=to_delete)
+
+# Function to chunk text using langchain's text_splitter
+def chunk_text(sample):
+    texts = custom_text_splitter.create_documents([sample])
+    return texts
 
 # Function to parse and store files in ChromaDB
 def parse_and_store_files(file_paths, ids):
@@ -77,9 +96,10 @@ def parse_and_store_files(file_paths, ids):
             content = read_docx(file_path)
         else:
             continue
-        
-        doc_id = ids[idx]
-        documents.append({"id": doc_id, "content": content})
+        chunks = chunk_text(content)
+        for jdx, chunk in enumerate(chunks):
+            doc_id = str(ids[idx])+"_"+str(jdx)
+            documents.append({"id": doc_id, "content": chunk.page_content})
     
     store_document_in_chromadb(documents)
 
