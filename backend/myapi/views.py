@@ -4,58 +4,13 @@ from rest_framework.response import Response
 from openai import OpenAI
 import os
 import chromadb
-
-# Initialize ChromaDB Client
-chroma_client = chromadb.PersistentClient(path="/tmp/chroma")
-try:
-    collection = chroma_client.get_collection(name="grant_docs")
-except:
-    collection = chroma_client.create_collection(name="grant_docs")
+import PyPDF2
+import docx
+from vectordb.views import *
 
 # OpenAI Client
 os.environ["OPENAI_API_KEY"] = "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"
 client = OpenAI()
-
-# OpenAI Embeddings 
-def get_openai_embeddings(texts):
-    response = client.embeddings.create(input=texts, model="text-embedding-ada-002")
-    embeddings = [data.embedding for data in response.data]
-    return embeddings
-
-def store_document_in_chromadb(documents):
-    embeddings = get_openai_embeddings([doc['content'] for doc in documents])
-    ids = [str(doc['id']) for doc in documents]
-    contents = [doc['content'] for doc in documents]
-
-    collection.upsert(
-        ids=ids,
-        embeddings=embeddings,
-        documents=contents,
-    )
-
-# # Test storing a document in chromadb
-# store_document_in_chromadb([
-#     {
-#         "id": 1,
-#         "content": "Lebron James is the greatest basketball player ever",
-#     }, 
-#     {
-#         "id": 2,
-#         "content": "Stanford is the best university in the world",
-#     },
-#     {
-#         "id": 3,
-#         "content": "Rova AI is now called Ambora Labs",
-#     },
-# ])
-
-# Retrieve similar documents
-def retrieve_similar_documents(query, n_results=2):
-    query_embedding = get_openai_embeddings([query])[0]
-    results = collection.query(query_embedding, n_results=n_results)
-    return results['documents'][0]
-
-# print(retrieve_similar_documents("Tell me about Rova AI"))
 
 def query_gpt(
     msg_arr,
