@@ -17,9 +17,11 @@ import PyPDF2
 import docx
 from time import sleep
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.embeddings import OllamaEmbeddings
 
 # Initialize the OpenAI client
-client = OpenAI(api_key='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')
+client = OpenAI(api_key='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') # this is for parsing templates, not used on actual data
+embeddings = OllamaEmbeddings(model="all-minilm") # this is smallest model, probably not best for embeddings
 
 # Initialize ChromaDB Client
 chroma_client = chromadb.PersistentClient(path="./chroma")
@@ -39,9 +41,8 @@ custom_text_splitter = RecursiveCharacterTextSplitter(
 
 # OpenAI Embeddings 
 def get_openai_embeddings(texts):
-    response = client.embeddings.create(input=texts, model="text-embedding-ada-002")
-    embeddings = [data.embedding for data in response.data]
-    return embeddings
+    doc_result = embeddings.embed_documents(texts)
+    return doc_result
 
 # Function to store documents in ChromaDB
 def store_document_in_chromadb(documents):
