@@ -70,8 +70,6 @@ def parse_and_store_files(file_paths):
     
     store_document_in_chromadb(documents)
 
-parse_and_store_files(["myapi/files/test_2.docx"])
-
 # Retrieve similar documents
 def retrieve_similar_documents(query, n_results=2):
     query_embedding = get_openai_embeddings([query])[0]
