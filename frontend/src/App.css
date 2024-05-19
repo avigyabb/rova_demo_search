@@ -9,3 +9,11 @@
   height: 200px; /* Set a fixed height for the card */
   overflow: auto; /* Add overflow for content longer than the fixed height */
 }
+
+.blue {
+  background-color : lightblue;
+}
+
+.gray {
+  background-color : lightgray;
+}

@@ -18,6 +18,7 @@ import docx
 from time import sleep
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import OllamaEmbeddings
+from .chat import *
 
 # Initialize the OpenAI client
 client = OpenAI(api_key='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') # this is for parsing templates, not used on actual data
@@ -189,3 +190,9 @@ class FileDeleteView(APIView):
 
         file.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(["GET"])
+def send_message(request):
+    message = request.query_params.get("message")
+    response = respond_to_message(message)
+    return Response({"response" : response})
