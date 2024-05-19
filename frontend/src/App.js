@@ -98,8 +98,12 @@ function App() {
   };
 
   return (
-    <div>
+    <div style={{ display: 'flex', height: '100vh' }}>
       <FileUploadComponent />
+      <div style={{ flex: 1, padding: '20px' }}>
+        <h1>Content Area</h1>
+        {/* Your main content goes here */}
+      </div>
     </div>
   );
 }

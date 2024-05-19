@@ -62,7 +62,6 @@ const FileUploadComponent = () => {
   
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
       <div style={{ 
         width: '300px', 
         backgroundColor: '#f0f0f0', 
@@ -108,11 +107,6 @@ const FileUploadComponent = () => {
         />
       </label>
       </div>
-      <div style={{ flex: 1, padding: '20px' }}>
-        <h1>Content Area</h1>
-        {/* Your main content goes here */}
-      </div>
-    </div>
   );
 };
 

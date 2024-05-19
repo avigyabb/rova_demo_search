@@ -6,16 +6,88 @@ from .models import UploadedFile
 from .serializers import UploadedFileSerializer
 import os
 from rest_framework.generics import ListAPIView
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 from openai import OpenAI
 import json
+import pdfplumber
+import chromadb
+import PyPDF2
+import docx
+from time import sleep
 
 # Initialize the OpenAI client
 client = OpenAI(api_key='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')
 
-import pdfplumber
-import io
+# Initialize ChromaDB Client
+chroma_client = chromadb.PersistentClient(path="./chroma")
+try:
+    collection = chroma_client.get_collection(name="grant_docs")
+except:
+    collection = chroma_client.create_collection(name="grant_docs")
 
+# OpenAI Embeddings 
+def get_openai_embeddings(texts):
+    response = client.embeddings.create(input=texts, model="text-embedding-ada-002")
+    embeddings = [data.embedding for data in response.data]
+    return embeddings
+
+# Function to store documents in ChromaDB
+def store_document_in_chromadb(documents):
+    embeddings = get_openai_embeddings([doc['content'] for doc in documents])
+    ids = [str(doc['id']) for doc in documents]
+    contents = [doc['content'] for doc in documents]
+
+    collection.upsert(
+        ids=ids,
+        embeddings=embeddings,
+        documents=contents,
+    )
+
+# Function to read content from PDF files
+def read_pdf(file_path):
+    content = ""
+    with open(file_path, "rb") as file:
+        reader = PyPDF2.PdfReader(file)
+        for page_num in range(len(reader.pages)):
+            page = reader.pages[page_num]
+            content += page.extract_text()
+    return content
+
+# Function to read content from DOCX files
+def read_docx(file_path):
+    doc = docx.Document(file_path)
+    content = ""
+    for paragraph in doc.paragraphs:
+        content += paragraph.text
+    return content
+
+# Function to delete from chroma db given id
+def delete_from_chromadb(ids):
+    collection.delete(ids=ids)
+
+# Function to parse and store files in ChromaDB
+def parse_and_store_files(file_paths, ids):
+    documents = []
+    for idx, file_path in enumerate(file_paths):
+        if file_path.endswith(".pdf"):
+            content = read_pdf(file_path)
+        elif file_path.endswith(".docx"):
+            content = read_docx(file_path)
+        else:
+            continue
+        
+        doc_id = ids[idx]
+        documents.append({"id": doc_id, "content": content})
+    
+    store_document_in_chromadb(documents)
+
+# Retrieve similar documents
+def retrieve_similar_documents(query, n_results=2):
+    query_embedding = get_openai_embeddings([query])[0]
+    results = collection.query(query_embedding, n_results=n_results)
+    return results['documents'][0]
 
 class FileListView(ListAPIView):
     queryset = UploadedFile.objects.all()
@@ -58,19 +130,28 @@ def extract_questions(pdf_path):
 class FileUploadView(APIView):
     def post(self, request, is_grantapp, *args, **kwargs):
         file = request.FILES['file'] 
-        if(is_grantapp):
-            uploaded_file = UploadedFile(filename=file.name, file=file)
-            uploaded_file.save()
 
-            serializer = UploadedFileSerializer(uploaded_file)
-            questions = extract_questions(serializer.data['file'])
+        # Save the file using default storage and get the full path
+        file_name = default_storage.save("uploads/" + file.name, ContentFile(file.read()))
+        full_file_path = default_storage.path(file_name)
+
+        # Ensure the file exists
+        if not default_storage.exists(file_name):
+            return Response({"error": "File not saved correctly"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Create an UploadedFile instance with the file path
+        uploaded_file = UploadedFile(filename=file.name, file=file_name)
+        uploaded_file.save()
+
+        serializer = UploadedFileSerializer(uploaded_file)
+
+        if(is_grantapp):
+            questions = extract_questions(full_file_path)
+            parse_and_store_files([full_file_path], [uploaded_file.id])
             return Response(questions, status=status.HTTP_201_CREATED)
         else:
 
-            uploaded_file = UploadedFile(filename=file.name, file=file)
-            uploaded_file.save()
-
-            serializer = UploadedFileSerializer(uploaded_file)
+            parse_and_store_files([full_file_path], [uploaded_file.id])
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class FileDeleteView(APIView):
@@ -80,6 +161,7 @@ class FileDeleteView(APIView):
 
         if os.path.exists(file_path):
             os.remove(file_path)
+        delete_from_chromadb([str(pk)])
 
         file.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
