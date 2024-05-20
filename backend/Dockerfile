@@ -3,6 +3,7 @@ FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu20.04
 
 #set up environment
 RUN apt-get update && apt-get install --no-install-recommends --no-install-suggests -y curl
+RUN apt-get update && apt-get install -y iputils-ping
 RUN apt-get install unzip
 RUN apt-get -y install python3
 RUN apt-get -y install python3-pip

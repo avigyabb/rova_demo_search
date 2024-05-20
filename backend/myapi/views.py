@@ -21,11 +21,11 @@ from .chat import respond_to_message
 
 from langchain_community.llms import Ollama
 
-llm = Ollama(model = 'gemma:2b')
+llm = Ollama(model = 'gemma:2b', base_url="http://ollama:11434")
 
 # Initialize the OpenAI client
 client = OpenAI(api_key='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') # this is for parsing templates, not used on actual data
-embeddings = OllamaEmbeddings(model="all-minilm") # this is smallest model, probably not best for embeddings
+embeddings = OllamaEmbeddings(model="all-minilm", base_url="http://ollama:11434") # this is smallest model, probably not best for embeddings
 
 # Initialize ChromaDB Client
 chroma_client = chromadb.PersistentClient(path="./chroma")
@@ -112,7 +112,7 @@ def parse_and_store_files(file_paths, ids):
 def retrieve_similar_documents(query, n_results=2):
     query_embedding = get_openai_embeddings([query])[0]
     results = collection.query(query_embedding, n_results=n_results)
-    return results['documents'][0]
+    return results['documents']
 
 def extract_text_from_pdf(pdf_path):
     page_texts = []
@@ -211,7 +211,7 @@ class LlmModelView(APIView):
         chat_history.save()
         
         # Perform RAG
-        similar_documents = retrieve_similar_documents(message, 5)
+        similar_documents = "\n".join(retrieve_similar_documents(message, 5))
         response = respond_to_message(llm, message, similar_documents)
 
         # Save response in chat history
