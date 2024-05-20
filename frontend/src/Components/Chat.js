@@ -6,11 +6,35 @@ export default function Chat() {
     const [inputValue, setInputValue] = useState("");
     let [chatLog, setChatLog] = useState([]);
 
+    const [chat, setChat] = useState([]);
+
+    const handleReset = async () => {
+        try {
+            const response = await fetch(process.env.REACT_APP_API_URL + `reset-chat/`, {method: 'DELETE'});
+            setChatLog([]);
+        } catch (error) {
+            console.error('Error resetting chat:', error);
+        }
+    };
+
+    useEffect(() => {
+        const fetchChat = async () => {
+          try {
+            const response = await fetch(process.env.REACT_APP_API_URL + 'chat-history/');
+            const result = await response.json();
+            setChatLog(result);
+          } catch (error) {
+            console.error('Error fetching chat:', error);
+          }
+        };
+        fetchChat();
+      }, []);
+ 
     const handleSubmit = (event) => {
         event.preventDefault()
         const sendMessage = async() => {
             try {
-                const userChat = {type : "user", message : inputValue}
+                const userChat = {user : "user", message : inputValue}
                 setChatLog(prevChatLog => [...prevChatLog, userChat])
                 const params = {
                     message : inputValue
@@ -19,7 +43,7 @@ export default function Chat() {
                     method: 'POST',
                     body: inputValue,
                 })
-                const assistantChat = {type : "assistant", message : response.data.response}
+                const assistantChat = {user : "assistant", message : response.data.response}
                 setChatLog(prevChatLog => [...prevChatLog, assistantChat])
             } catch (error) {
                 console.error(error)
@@ -32,6 +56,15 @@ export default function Chat() {
     return (
         <div className = "container mx-auto">
             <div className = "flex flex-col h-screen bg-gray-900" style = {{maxHeight: "100vh", backgroundColor: "#e9e9e9"}}>
+                 <div className="flex justify-end p-4">
+                    <button
+                        className="rounded-lg px-4 py-2 font-semibold focus:outline-none hover:bg-purple-600 transition-colors duration-300"
+                        onClick={handleReset}
+                        style={{ background: "#fd7013", color: "white" }}
+                    >
+                        Reset Chat
+                    </button>
+                </div>
                 <div className = "flex-grow p-6" style = {{overflowY: "auto"}}>
                     <div className = "flex flex-col space-y-4">
                         {
@@ -41,8 +74,8 @@ export default function Chat() {
                                     className = {`flex flex-col justify-start`}
                                     style = {{fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word'}}
                                 >
-                                    <div className={`chat ${message.type === "user" ? 'blue' : 'gray'} rounded-lg p-2`}>
-                                        {message.type}
+                                    <div className={`chat ${message.user === "user" ? 'blue' : 'gray'} rounded-lg p-2`}>
+                                        {message.user}
                                     </div>
                                     <div className = {`rounded-lg p-2`}>
                                         {message.message}

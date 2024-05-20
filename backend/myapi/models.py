@@ -7,3 +7,11 @@ class UploadedFile(models.Model):
 
     def __str__(self):
         return self.filename
+    
+# Model to store chat history
+class ChatHistory(models.Model):
+    user = models.CharField(max_length=255)
+    message = models.TextField()
+
+    def __str__(self):
+        return self.user

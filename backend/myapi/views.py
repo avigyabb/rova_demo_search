@@ -2,8 +2,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import UploadedFile
-from .serializers import UploadedFileSerializer
+from .models import UploadedFile, ChatHistory
+from .serializers import UploadedFileSerializer, ChatHistorySerializer
 import os
 from rest_framework.generics import ListAPIView
 from django.core.files.storage import default_storage
@@ -114,10 +114,6 @@ def retrieve_similar_documents(query, n_results=2):
     results = collection.query(query_embedding, n_results=n_results)
     return results['documents'][0]
 
-class FileListView(ListAPIView):
-    queryset = UploadedFile.objects.all()
-    serializer_class = UploadedFileSerializer
-
 def extract_text_from_pdf(pdf_path):
     page_texts = []
     with pdfplumber.open(pdf_path) as pdf:
@@ -152,6 +148,10 @@ def extract_questions(pdf_path):
     questions = json.loads(completion.choices[0].message.content)
     return questions
 
+class FileListView(ListAPIView):
+    queryset = UploadedFile.objects.all()
+    serializer_class = UploadedFileSerializer
+
 class FileUploadView(APIView):
     def post(self, request, is_grantapp, *args, **kwargs):
         file = request.FILES['file'] 
@@ -175,7 +175,6 @@ class FileUploadView(APIView):
             #parse_and_store_files([full_file_path], [uploaded_file.id])
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-
             parse_and_store_files([full_file_path], [uploaded_file.id])
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -193,10 +192,31 @@ class FileDeleteView(APIView):
 
         file.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class ChatHistoryView(ListAPIView):
+    queryset = ChatHistory.objects.all()
+    serializer_class = ChatHistorySerializer
+
+# deletes the entire chat history
+class ChatHistoryDeleteView(APIView):
+    def delete(self, request, *args, **kwargs): 
+        ChatHistory.objects.all().delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class LlmModelView(APIView):
     def post(self, request, *args, **kwargs):
+        # Save message in chat history
         message = request.data.get("body")
+        chat_history = ChatHistory(user="user", message=message)
+        chat_history.save()
+        
+        # Perform RAG
         similar_documents = retrieve_similar_documents(message, 5)
         response = respond_to_message(llm, message, similar_documents)
+
+        # Save response in chat history
+        chat_history = ChatHistory(user="assistant", message=response)
+        chat_history.save()
         return Response({"response" : response})
+    
+
