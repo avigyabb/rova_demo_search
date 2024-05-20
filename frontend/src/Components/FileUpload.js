@@ -8,7 +8,7 @@ const FileUploadComponent = () => {
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        const response = await fetch('http://localhost:8000/files/');
+        const response = await fetch(process.env.REACT_APP_API_URL + 'files/');
         const result = await response.json();
         setFiles(result);
       } catch (error) {
@@ -21,7 +21,7 @@ const FileUploadComponent = () => {
 
   const handleDelete = async (fileId) => {
     try {
-      const response = await fetch(`http://localhost:8000/delete/${fileId}/`, {
+      const response = await fetch(process.env.REACT_APP_API_URL + `delete/${fileId}/`, {
         method: 'DELETE',
       });
       if (response.status === 204) {
@@ -42,7 +42,7 @@ const FileUploadComponent = () => {
       formData.append('file', file);
 
       try {
-        const response = await fetch(`http://localhost:8000/upload/${isGrantApp}/`, {
+        const response = await fetch(process.env.REACT_APP_API_URL + `upload/${isGrantApp}/`, {
           method: 'POST',
           body: formData,
         });
