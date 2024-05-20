@@ -39,7 +39,11 @@ export default function Chat() {
                 const params = {
                     message : inputValue
                 }
+<<<<<<< Updated upstream
                 const response = await axios.post(process.env.REACT_APP_API_URL + "send-message/", {
+=======
+                const response = await axios.post("http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/send-message/", {
+>>>>>>> Stashed changes
                     method: 'POST',
                     body: inputValue,
                 })
