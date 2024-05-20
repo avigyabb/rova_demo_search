@@ -10,7 +10,7 @@ export default function Chat() {
 
     const handleReset = async () => {
         try {
-            const response = await fetch(process.env.REACT_APP_API_URL + `reset-chat/`, {method: 'DELETE'});
+            const response = await fetch('http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/reset-chat/', {method: 'DELETE'});
             setChatLog([]);
         } catch (error) {
             console.error('Error resetting chat:', error);
@@ -20,7 +20,7 @@ export default function Chat() {
     useEffect(() => {
         const fetchChat = async () => {
           try {
-            const response = await fetch(process.env.REACT_APP_API_URL + 'chat-history/');
+            const response = await fetch('http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/chat-history/');
             const result = await response.json();
             setChatLog(result);
           } catch (error) {
@@ -39,11 +39,7 @@ export default function Chat() {
                 const params = {
                     message : inputValue
                 }
-<<<<<<< Updated upstream
-                const response = await axios.post(process.env.REACT_APP_API_URL + "send-message/", {
-=======
                 const response = await axios.post("http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/send-message/", {
->>>>>>> Stashed changes
                     method: 'POST',
                     body: inputValue,
                 })

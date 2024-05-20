@@ -8,11 +8,7 @@ const FileUploadComponent = () => {
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-<<<<<<< Updated upstream
-        const response = await fetch(process.env.REACT_APP_API_URL + 'files/');
-=======
         const response = await fetch('http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/files/');
->>>>>>> Stashed changes
         const result = await response.json();
         setFiles(result);
       } catch (error) {
@@ -25,11 +21,7 @@ const FileUploadComponent = () => {
 
   const handleDelete = async (fileId) => {
     try {
-<<<<<<< Updated upstream
-      const response = await fetch(process.env.REACT_APP_API_URL + `delete/${fileId}/`, {
-=======
       const response = await fetch(`http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/delete/${fileId}/`, {
->>>>>>> Stashed changes
         method: 'DELETE',
       });
       if (response.status === 204) {
@@ -50,11 +42,7 @@ const FileUploadComponent = () => {
       formData.append('file', file);
 
       try {
-<<<<<<< Updated upstream
-        const response = await fetch(process.env.REACT_APP_API_URL + `upload/${isGrantApp}/`, {
-=======
         const response = await fetch(`http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/upload/${isGrantApp}/`, {
->>>>>>> Stashed changes
           method: 'POST',
           body: formData,
         });
