@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import FileUploadComponent from './Components/FileUpload';
 import './App.css';
 import posthog from './posthog';
-import Chat from './Components/Chat.js';
+import Home from './Components/Home.js'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
 function App() {
   useEffect(() => {
@@ -10,14 +10,15 @@ function App() {
     posthog.capture('$pageview');
   }, []);
 
+  const basePath = process.env.REACT_APP_URL_EXT;
+  console.log(basePath)
+
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <FileUploadComponent />
-      <div style={{ flex: 1 }}>
-        {/* Your main content goes here */}
-        <Chat/>
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        <Route path={basePath} element={<Home />} />
+      </Routes>
+    </Router>
   );
 }
 
