@@ -10,7 +10,7 @@ export default function Chat() {
 
     const handleReset = async () => {
         try {
-            const response = await fetch('http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/reset-chat/', {method: 'DELETE'});
+            const response = await fetch('https://amboralabsservice.com/reset-chat/', {method: 'DELETE'});
             setChatLog([]);
         } catch (error) {
             console.error('Error resetting chat:', error);
@@ -20,7 +20,7 @@ export default function Chat() {
     useEffect(() => {
         const fetchChat = async () => {
           try {
-            const response = await fetch('http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/chat-history/');
+            const response = await fetch('https://amboralabsservice.com/chat-history/');
             const result = await response.json();
             setChatLog(result);
           } catch (error) {
@@ -40,7 +40,7 @@ export default function Chat() {
                 const params = {
                     message : inputValue
                 }
-                const response = await axios.post("http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com/send-message/", {
+                const response = await axios.post("https://amboralabsservice.com/send-message/", {
                     method: 'POST',
                     body: inputValue,
                 })
