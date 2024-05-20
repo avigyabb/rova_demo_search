@@ -211,7 +211,7 @@ class LlmModelView(APIView):
         chat_history.save()
         
         # Perform RAG
-        similar_documents = "\n".join(retrieve_similar_documents(message, 5))
+        similar_documents = str(retrieve_similar_documents(message, 5))
         response = respond_to_message(llm, message, similar_documents)
 
         # Save response in chat history

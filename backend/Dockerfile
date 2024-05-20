@@ -16,9 +16,8 @@ COPY . .
 
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# RUN curl -fsSL https://ollama.com/install.sh | sh
-# RUN ollama serve & 
-# RUN ollama pull all-minilm & 
+# Make sure the entrypoint script is executable
+RUN chmod +x entrypoint.sh
 
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
@@ -26,7 +25,5 @@ ENV LANG=C.UTF-8
 
 EXPOSE 80 11434
 
-# Start the Django application using manage.py
-CMD ["python3", "manage.py", "makemigrations"]
-CMD ["python3", "manage.py", "migrate"]
-CMD ["python3", "manage.py", "runserver", "0.0.0.0:80"]
+# Run the entrypoint script
+CMD ["./entrypoint.sh"]
