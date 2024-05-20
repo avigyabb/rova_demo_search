@@ -31,6 +31,7 @@ export default function Chat() {
       }, []);
  
     const handleSubmit = (event) => {
+        console.log("ran")
         event.preventDefault()
         const sendMessage = async() => {
             try {
@@ -77,7 +78,7 @@ export default function Chat() {
                                     <div className={`chat ${message.user === "user" ? 'blue' : 'gray'} rounded-lg p-2`}>
                                         {message.user}
                                     </div>
-                                    <div className = {`rounded-lg p-2`}>
+                                    <div className = {`rounded-lg p-2 text-left`} style={{alignContent: 'left'}}>
                                         {message.message}
                                     </div>
                                 </div>
