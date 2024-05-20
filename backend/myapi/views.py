@@ -15,10 +15,13 @@ import pdfplumber
 import chromadb
 import PyPDF2
 import docx
-from time import sleep
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import OllamaEmbeddings
-from .chat import *
+from .chat import respond_to_message
+
+from langchain_community.llms import Ollama
+
+llm = Ollama(model = 'gemma:2b')
 
 # Initialize the OpenAI client
 client = OpenAI(api_key='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') # this is for parsing templates, not used on actual data
@@ -194,5 +197,6 @@ class FileDeleteView(APIView):
 class LlmModelView(APIView):
     def post(self, request, *args, **kwargs):
         message = request.data.get("body")
-        response = respond_to_message(message)
+        similar_documents = retrieve_similar_documents(message, 5)
+        response = respond_to_message(llm, message, similar_documents)
         return Response({"response" : response})
