@@ -54,6 +54,20 @@ export default function Chat() {
         setInputValue("")
     };
 
+    function formatGPTMessage(message) {
+        if (typeof message !== 'string') {
+            return '';
+        }
+    
+        // Replace **bold** with <strong>bold</strong>
+        const boldFormattedMessage = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+        // Replace newlines with <br>
+        const newlineFormattedMessage = boldFormattedMessage.replace(/\n/g, '<br>');
+    
+        return newlineFormattedMessage;
+    }
+
     return (
         <div className = "container mx-auto">
             <div className = "flex flex-col h-screen bg-gray-900" style = {{maxHeight: "100vh", backgroundColor: "#e9e9e9"}}>
@@ -79,7 +93,7 @@ export default function Chat() {
                                         {message.user}
                                     </div>
                                     <div className = {`rounded-lg p-2 text-left`} style={{alignContent: 'left'}}>
-                                        {message.message}
+                                        <div dangerouslySetInnerHTML={{ __html: formatGPTMessage(message.message) }} />
                                     </div>
                                 </div>
                             )
