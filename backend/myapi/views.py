@@ -191,8 +191,8 @@ class FileDeleteView(APIView):
         file.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-@api_view(["GET"])
-def send_message(request):
-    message = request.query_params.get("message")
-    response = respond_to_message(message)
-    return Response({"response" : response})
+class LlmModelView(APIView):
+    def post(self, request, *args, **kwargs):
+        message = request.data.get("body")
+        response = respond_to_message(message)
+        return Response({"response" : response})

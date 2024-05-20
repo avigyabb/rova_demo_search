@@ -15,8 +15,11 @@ export default function Chat() {
                 const params = {
                     message : inputValue
                 }
-                //const response = await axios.get("send-message/", {params})
-                const assistantChat = {type : "assistant", message : "hello"}
+                const response = await axios.post("http://127.0.0.1:8000/send-message/", {
+                    method: 'POST',
+                    body: inputValue,
+                })
+                const assistantChat = {type : "assistant", message : response.data.response}
                 setChatLog(prevChatLog => [...prevChatLog, assistantChat])
             } catch (error) {
                 console.error(error)
