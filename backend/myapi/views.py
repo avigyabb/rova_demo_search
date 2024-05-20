@@ -19,9 +19,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import OllamaEmbeddings
 from .chat import respond_to_message
 
-from langchain_community.llms import Ollama
+from langchain_community.chat_models import ChatOllama
 
-llm = Ollama(model = 'gemma:2b', base_url="http://ollama:11434")
+llm = ChatOllama(model = 'llama3', base_url="http://ollama:11434")
 
 # Initialize the OpenAI client
 client = OpenAI(api_key='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') # this is for parsing templates, not used on actual data
