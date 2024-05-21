@@ -3,12 +3,16 @@ docker pull ollama/ollama
 
 # Build the main app image
 docker build -t grant_app .
+# Build separate image for dev for good measure
+docker build -t grant_app .
 
 # Create the network
 docker network create django-ollama-service
 
-# Run the first container (port 80)
+# Run the first container (if in prod)
 docker run --network=django-ollama-service -p 443:443 -p 80:80 --name django grant_app
+# or if in dev
+docker run --network=django-ollama-service -p 8080:80 -p 4343:443 --name django_dev grant_app_dev
 
 # Run the second container (port 11434)
 docker run --network=django-ollama-service -d --gpus=all -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
