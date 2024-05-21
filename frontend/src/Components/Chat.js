@@ -33,16 +33,16 @@ export default function Chat() {
     const handleSubmit = (event) => {
         console.log("ran")
         event.preventDefault()
-        const chatWindowDiv = document.getElementById("chatWindowDiv")
-        if (chatWindowDiv) {
-            const height = chatWindowDiv.scrollHeight
-            chatWindowDiv.scrollTop = height
-        }
         const sendMessage = async() => {
             try {
                 const userChat = {user : "user", message : inputValue}
                 setChatLog(prevChatLog => [...prevChatLog, userChat])
                 setIsLoading(true)
+                const chatWindowDiv = document.getElementById("chatWindowDiv")
+                if (chatWindowDiv) {
+                    const height = chatWindowDiv.scrollHeight
+                    chatWindowDiv.scrollTop = height
+                }
                 const params = {
                     message : inputValue
                 }
@@ -53,6 +53,11 @@ export default function Chat() {
                 const assistantChat = {user : "assistant", message : response.data.response}
                 setChatLog(prevChatLog => [...prevChatLog, assistantChat])
                 setIsLoading(false)
+                chatWindowDiv = document.getElementById("chatWindowDiv")
+                if (chatWindowDiv) {
+                    const height = chatWindowDiv.scrollHeight
+                    chatWindowDiv.scrollTop = height
+                }
             } catch (error) {
                 console.error(error)
             }
