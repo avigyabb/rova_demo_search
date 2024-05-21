@@ -8,7 +8,7 @@ docker build -t grant_app .
 docker network create django-ollama-service
 
 # Run the first container (port 80)
-docker run --network=django-ollama-service -p 80:80 --name django grant_app
+docker run --network=django-ollama-service -p 443:443 -p 80:80 --name django grant_app
 
 # Run the second container (port 11434)
 docker run --network=django-ollama-service -d --gpus=all -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama
@@ -21,5 +21,7 @@ ollama pull gemma:2b
 # To stop all containers
 docker stop $(docker ps -a -q)
 
-in the myapi folder run:
-ollama serve & ollama run gemma:2b
+# If cert.pem or privkey.pem not found check permissions, ensure readability
+sudo su
+su root
+chmod 664 privkey.pem

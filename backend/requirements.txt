@@ -19,3 +19,4 @@ langchain-text-splitters==0.2.0
 langchain-core==0.2.0
 langchain-experimental==0.0.59
 langchain-openai==0.1.7
+django-sslserver==0.22
