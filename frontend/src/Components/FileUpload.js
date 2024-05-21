@@ -8,7 +8,7 @@ const FileUploadComponent = () => {
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        const response = await fetch('https://amboralabsservice.com/files/');
+        const response = await fetch('https://amboralabsservice.com:4343/files/');
         const result = await response.json();
         setFiles(result);
       } catch (error) {
@@ -21,7 +21,7 @@ const FileUploadComponent = () => {
 
   const handleDelete = async (fileId) => {
     try {
-      const response = await fetch(`https://amboralabsservice.com/delete/${fileId}/`, {
+      const response = await fetch(`https://amboralabsservice.com:4343/delete/${fileId}/`, {
         method: 'DELETE',
       });
       if (response.status === 204) {
@@ -42,7 +42,7 @@ const FileUploadComponent = () => {
       formData.append('file', file);
 
       try {
-        const response = await fetch(`https://amboralabsservice.com/upload/${isGrantApp}/`, {
+        const response = await fetch(`https://amboralabsservice.com:4343/upload/${isGrantApp}/`, {
           method: 'POST',
           body: formData,
         });
