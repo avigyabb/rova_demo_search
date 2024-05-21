@@ -21,7 +21,6 @@ function App() {
   }, []);
 
   const basePath = process.env.REACT_APP_URL_EXT;
-  console.log(basePath)
 
   return (
     <ThemeProvider theme={customTheme}>

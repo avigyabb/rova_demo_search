@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
 import axios from 'axios';
 import "../Styles/Chat.css";
+import { REACT_APP_API_URL } from "../consts";
 
 export default function Chat() {
     const [inputValue, setInputValue] = useState("");
@@ -9,7 +10,7 @@ export default function Chat() {
 
     const handleReset = async () => {
         try {
-            const response = await fetch('https://amboralabsservice.com:4343/reset-chat/', {method: 'DELETE'});
+            const response = await fetch(REACT_APP_API_URL + 'reset-chat/', {method: 'DELETE'});
             setChatLog([]);
         } catch (error) {
             console.error('Error resetting chat:', error);
@@ -19,7 +20,7 @@ export default function Chat() {
     useEffect(() => {
         const fetchChat = async () => {
           try {
-            const response = await fetch('https://amboralabsservice.com:4343/chat-history/');
+            const response = await fetch(REACT_APP_API_URL + 'chat-history/');
             const result = await response.json();
             setChatLog(result);
           } catch (error) {
@@ -45,7 +46,7 @@ export default function Chat() {
                 const params = {
                     message : inputValue
                 }
-                const response = await axios.post("https://amboralabsservice.com:4343/send-message/", {
+                const response = await axios.post(REACT_APP_API_URL + "send-message/", {
                     method: 'POST',
                     body: inputValue,
                 })

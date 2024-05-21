@@ -8,7 +8,6 @@ import Auth from './Auth';
 const Login = () => {
     const navigate = useNavigate();
     const handleLoginChange = (event) => {
-        console.log(process.env.REACT_APP_URL_EXT)
         if (event.target.value === process.env.REACT_APP_URL_EXT) {
             navigate(`${process.env.REACT_APP_URL_EXT}`);
         }

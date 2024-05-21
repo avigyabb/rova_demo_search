@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaTrash } from 'react-icons/fa';
 import "../Styles/FileUpload.css"
+import { REACT_APP_API_URL } from "../consts";
 
 const FileUploadComponent = () => {
   const [files, setFiles] = useState([]);
@@ -8,7 +9,7 @@ const FileUploadComponent = () => {
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        const response = await fetch('https://amboralabsservice.com:4343/files/');
+        const response = await fetch(REACT_APP_API_URL + 'files/');
         const result = await response.json();
         setFiles(result);
       } catch (error) {
@@ -21,7 +22,7 @@ const FileUploadComponent = () => {
 
   const handleDelete = async (fileId) => {
     try {
-      const response = await fetch(`https://amboralabsservice.com:4343/delete/${fileId}/`, {
+      const response = await fetch(REACT_APP_API_URL + `delete/${fileId}/`, {
         method: 'DELETE',
       });
       if (response.status === 204) {
@@ -42,7 +43,7 @@ const FileUploadComponent = () => {
       formData.append('file', file);
 
       try {
-        const response = await fetch(`https://amboralabsservice.com:4343/upload/${isGrantApp}/`, {
+        const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
           method: 'POST',
           body: formData,
         });
@@ -78,11 +79,11 @@ const FileUploadComponent = () => {
       </label>
 
         <div style={{ marginTop: '20px' }}>
-          <h3>Uploaded Files</h3>
+          <h1 style={{ fontWeight: 'bold' }}>Uploaded Files</h1>
           {files.length === 0 ? (
             <p>No files uploaded yet.</p>
           ) : (
-            <ul style={{ paddingLeft: '20px' }}>
+            <ul style={{ paddingLeft: '20px', marginTop: '10px' }}>
               {files.map((file) => (
                 <li key={file.filename} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.filename}</span>
