@@ -29,6 +29,14 @@ export default function Chat() {
         };
         fetchChat();
       }, []);
+
+      useEffect (() => {
+        const chatWindowDiv = document.getElementById("chatWindowDiv")
+        if (chatWindowDiv) {
+            const height = chatWindowDiv.scrollHeight
+            chatWindowDiv.scrollTop = height
+        }
+      }, [chatLog])
  
     const handleSubmit = (event) => {
         console.log("ran")
@@ -38,11 +46,6 @@ export default function Chat() {
                 const userChat = {user : "user", message : inputValue}
                 setChatLog(prevChatLog => [...prevChatLog, userChat])
                 setIsLoading(true)
-                const chatWindowDiv = document.getElementById("chatWindowDiv")
-                if (chatWindowDiv) {
-                    const height = chatWindowDiv.scrollHeight
-                    chatWindowDiv.scrollTop = height
-                }
                 const params = {
                     message : inputValue
                 }
@@ -53,11 +56,6 @@ export default function Chat() {
                 const assistantChat = {user : "assistant", message : response.data.response}
                 setChatLog(prevChatLog => [...prevChatLog, assistantChat])
                 setIsLoading(false)
-                chatWindowDiv = document.getElementById("chatWindowDiv")
-                if (chatWindowDiv) {
-                    const height = chatWindowDiv.scrollHeight
-                    chatWindowDiv.scrollTop = height
-                }
             } catch (error) {
                 console.error(error)
             }
