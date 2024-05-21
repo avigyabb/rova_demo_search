@@ -11,9 +11,11 @@ function Home() {
   }, []);
 
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <FileUploadComponent />
-      <div style={{ flex: 1 }}>
+    <div style={{ display : "flex", height: '100vh', width : "100%" }}>
+      <div style = {{width : "300px", display : "flex"}}>
+        <FileUploadComponent/>
+      </div>
+      <div style={{ maxWidth : "100% - 300px", flexGrow : 1, overflowX : "auto" }}>
         {/* Your main content goes here */}
         <Chat/>
       </div>
