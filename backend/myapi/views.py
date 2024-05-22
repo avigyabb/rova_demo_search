@@ -28,9 +28,9 @@ from langchain_core.retrievers import BaseRetriever
 from langchain_core.documents import Document
 from langchain.tools.retriever import create_retriever_tool
 
-llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, openai_api_key="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") #ChatOllama(model = 'qwen:0.5b') #base_url="http://ollama:11434"
+llm = ChatOllama(model = 'phi3:instruct', format='json') #base_url="http://ollama:11434" #ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, openai_api_key="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") #
 
-embeddings = OllamaEmbeddings(model="all-minilm", base_url="http://ollama:11434") # this is smallest model, probably not best for embeddings
+embeddings = OllamaEmbeddings(model="all-minilm") # this is smallest model, probably not best for embeddings
 # embeddings = OllamaEmbeddings(model="all-minilm")
 
 # Initialize ChromaDB Client
