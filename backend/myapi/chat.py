@@ -3,6 +3,10 @@ import json
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from openai import OpenAI
 import pdfplumber
+from langchain import hub
+from langchain.agents import AgentExecutor, create_openai_tools_agent
+
+prompt = hub.pull("hwchase17/openai-tools-agent")
 
 # Initialize the OpenAI client
 client = OpenAI(api_key='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') # this is for parsing templates, not used on actual data
@@ -13,7 +17,10 @@ def extract_text_from_pdf(pdf_path):
         page_texts = [page.extract_text() for page in pdf.pages]
         return " ".join(page_texts)
 
-def respond_to_message (llm, query, documents):
+def respond_to_message (llm, query, tools):
+    agent = create_openai_tools_agent(llm, tools,prompt)
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
     all_messages = ChatHistory.objects.all()
     # message.user = 'user' or 'assistant'
     # message.message = str
@@ -23,10 +30,11 @@ def respond_to_message (llm, query, documents):
             messages.append(HumanMessage(content=message.message))
         elif message.user == 'assistant':
             messages.append(AIMessage(content=message.message))
-    most_recent = f"Here is some helpful context: {documents}, my question is: {query}"
-    messages.append(HumanMessage(content=most_recent))
-    response = llm.invoke(messages)
-    return response.content
+    result = agent_executor.invoke({"input": query, "chat_history": messages})
+    # most_recent = f"Here is some helpful context: {documents}, my question is: {query}"
+    # messages.append(HumanMessage(content=most_recent))
+    #response = llm.invoke(messages)
+    return result["output"] #response.content
 
 def extract_questions(pdf_path):
     text = extract_text_from_pdf(pdf_path)
@@ -62,3 +70,20 @@ def extract_questions(pdf_path):
     )
     questions = json.loads(completion.choices[0].message.content)
     return questions
+
+def draft_from_questions(llm, questions, tools):
+  questions = questions['questions']
+  draft = dict()
+  for q in questions:
+    query = """Respond to the folowing question from a grant application using the given documents and context: {}""".format(q['description'])
+    response = respond_to_message(llm, query, tools)
+
+    # Give draft context to assistant
+    chat_history = ChatHistory(user="user", message=query)
+    chat_history.save()
+    chat_history = ChatHistory(user="assistant", message=response)
+    chat_history.save()
+
+    draft[q['description']] = response
+
+  return draft

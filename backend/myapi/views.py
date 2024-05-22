@@ -14,7 +14,7 @@ import PyPDF2
 import docx
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import OllamaEmbeddings
-from .chat import respond_to_message, extract_questions
+from .chat import respond_to_message, extract_questions, draft_from_questions
 
 from langchain_community.chat_models import ChatOllama
 from io import BytesIO
@@ -23,8 +23,12 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from django.http import HttpResponse
+from langchain_openai import ChatOpenAI
+from langchain_core.retrievers import BaseRetriever
+from langchain_core.documents import Document
+from langchain.tools.retriever import create_retriever_tool
 
-llm = ChatOllama(model = 'llama3', base_url="http://ollama:11434")
+llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, openai_api_key="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") #ChatOllama(model = 'qwen:0.5b') #base_url="http://ollama:11434"
 
 embeddings = OllamaEmbeddings(model="all-minilm", base_url="http://ollama:11434") # this is smallest model, probably not best for embeddings
 # embeddings = OllamaEmbeddings(model="all-minilm")
@@ -45,22 +49,37 @@ custom_text_splitter = RecursiveCharacterTextSplitter(
     length_function = len,
     )
 
+class ChromaRetriever(BaseRetriever):
+    """List of documents to retrieve from."""
+    k: int
+    """Number of top results to return"""
+
+    # Retrieve similar documents
+    def _retrieve_similar_documents_(self, query):
+        query_embedding = get_openai_embeddings([query])[0]
+        results = collection.query(query_embedding, n_results=self.k)
+        return [Document(page_content=chunk) for chunk in results['documents'][0]]
+
+    def _get_relevant_documents(self, query: str):
+        return self._retrieve_similar_documents_(query)
+
+class ToolWrapper:
+    def __init__(self):
+        retriever = ChromaRetriever(k=5)
+        # tools
+        tool = create_retriever_tool(
+            retriever,
+            "search_docs",
+            "Searches and returns excerpts from the documents that have uploaded by the user.",
+            )
+        self.tools = [tool]
+
+tools = ToolWrapper().tools
+
 # OpenAI Embeddings 
 def get_openai_embeddings(texts):
     doc_result = embeddings.embed_documents(texts)
     return doc_result
-
-# Function to store documents in ChromaDB
-def store_document_in_chromadb(documents):
-    embeddings = get_openai_embeddings([doc['content'] for doc in documents])
-    ids = [doc['id'] for doc in documents]
-    contents = [doc['content'] for doc in documents]
-
-    collection.upsert(
-        ids=ids,
-        embeddings=embeddings,
-        documents=contents,
-    )
 
 # Function to read content from PDF files
 def read_pdf(file_path):
@@ -80,52 +99,53 @@ def read_docx(file_path):
         content += paragraph.text
     return content
 
-# Function to delete from chroma db given id
-def delete_from_chromadb(x):
-    # Retrieve all entries from the collection
-    all_entries = collection.get()  # Assuming collection.get() retrieves all entries
-    ids = all_entries['ids']
-    to_delete = [id for id in ids if id.split("_")[0].strip() in x]
-    collection.delete(ids=to_delete)
-
 # Function to chunk text using langchain's text_splitter
 def chunk_text(sample):
     texts = custom_text_splitter.create_documents([sample])
     return texts
 
-# Function to parse and store files in ChromaDB
-def parse_and_store_files(file_paths, ids):
-    documents = []
-    for idx, file_path in enumerate(file_paths):
-        if file_path.endswith(".pdf"):
-            content = read_pdf(file_path)
-        elif file_path.endswith(".docx"):
-            content = read_docx(file_path)
-        else:
-            continue
-        chunks = chunk_text(content)
-        for jdx, chunk in enumerate(chunks):
-            doc_id = str(ids[idx])+"_"+str(jdx)
-            documents.append({"id": doc_id, "content": chunk.page_content})
+class ChromaManager():
+    def __init__(self, collection):
+        self.collection = collection
+
+    # Function to delete from chroma db given id
+    def delete_from_chromadb(self, x):
+        # Retrieve all entries from the collection
+        all_entries = self.collection.get()  # Assuming collection.get() retrieves all entries
+        ids = all_entries['ids']
+        to_delete = [id for id in ids if id.split("_")[0].strip() in x]
+        self.collection.delete(ids=to_delete)
     
-    store_document_in_chromadb(documents)
+    # Function to store documents in ChromaDB
+    def store_document_in_chromadb(self, documents):
+        embeddings = get_openai_embeddings([doc['content'] for doc in documents])
+        ids = [doc['id'] for doc in documents]
+        contents = [doc['content'] for doc in documents]
 
-# Retrieve similar documents
-def retrieve_similar_documents(query, n_results=5):
-    query_embedding = get_openai_embeddings([query])[0]
-    results = collection.query(query_embedding, n_results=n_results)
-    return results['documents']
+        self.collection.upsert(
+            ids=ids,
+            embeddings=embeddings,
+            documents=contents,
+        )
 
-def draft_from_questions(questions):
-  questions = questions['questions']
-  draft = dict()
-  for q in questions:
-    docs = retrieve_similar_documents(q['description'], n_results=20)
-    query = """Respond to the folowing question from a grant application using the given documents and context: {}""".format(q['description'])
-    response = respond_to_message(llm, query, docs)
-    draft[q['description']] = response
-  print(draft)
-  return draft
+    # Function to parse and store files in ChromaDB
+    def parse_and_store_files(self, file_paths, ids):
+        documents = []
+        for idx, file_path in enumerate(file_paths):
+            if file_path.endswith(".pdf"):
+                content = read_pdf(file_path)
+            elif file_path.endswith(".docx"):
+                content = read_docx(file_path)
+            else:
+                continue
+            chunks = chunk_text(content)
+            for jdx, chunk in enumerate(chunks):
+                doc_id = str(ids[idx])+"_"+str(jdx)
+                documents.append({"id": doc_id, "content": chunk.page_content})
+        
+        self.store_document_in_chromadb(documents)
+
+chroma_manager = ChromaManager(collection)
 
 class FileListView(ListAPIView):
     queryset = UploadedFile.objects.all()
@@ -151,7 +171,7 @@ class FileUploadView(APIView):
 
         if is_grantapp:
             questions = extract_questions(full_file_path)
-            draft = draft_from_questions(questions)
+            draft = draft_from_questions(llm, questions, tools)
             
             # Create the PDF
             buffer = BytesIO()
@@ -175,7 +195,7 @@ class FileUploadView(APIView):
             default_storage.delete(full_file_path)
             return response
         else:
-            parse_and_store_files([full_file_path], [uploaded_file.id])
+            chroma_manager.parse_and_store_files([full_file_path], [uploaded_file.id])
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class FileDeleteView(APIView):
@@ -187,7 +207,7 @@ class FileDeleteView(APIView):
         if os.path.exists(file_path):
             os.remove(file_path)
         try:
-            delete_from_chromadb([str(pk)])
+            chroma_manager.delete_from_chromadb([str(pk)])
         except:
             pass
 
@@ -210,10 +230,8 @@ class LlmModelView(APIView):
         message = request.data.get("body")
         chat_history = ChatHistory(user="user", message=message)
         chat_history.save()
-        
-        # Perform RAG
-        similar_documents = str(retrieve_similar_documents(message, 5))
-        response = respond_to_message(llm, message, similar_documents)
+
+        response = respond_to_message(llm, message, tools)
 
         # Save response in chat history
         chat_history = ChatHistory(user="assistant", message=response)
