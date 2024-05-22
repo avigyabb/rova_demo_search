@@ -24,9 +24,9 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from django.http import HttpResponse
 
-llm = ChatOllama(model = 'qwen:0.5b') #base_url="http://ollama:11434"
+llm = ChatOllama(model = 'llama3', base_url="http://ollama:11434")
 
-embeddings = OllamaEmbeddings(model="all-minilm") #base_url="http://ollama:11434" # this is smallest model, probably not best for embeddings
+embeddings = OllamaEmbeddings(model="all-minilm", base_url="http://ollama:11434") # this is smallest model, probably not best for embeddings
 # embeddings = OllamaEmbeddings(model="all-minilm")
 
 # Initialize ChromaDB Client
