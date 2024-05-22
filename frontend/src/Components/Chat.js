@@ -7,6 +7,8 @@ export default function Chat() {
     const [inputValue, setInputValue] = useState("");
     let [chatLog, setChatLog] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [inputRows, setInputRows] = useState(1);
+    const [inputAreaWidth, setInputAreaWidth] = useState(0);
 
     const handleReset = async () => {
         try {
@@ -78,8 +80,45 @@ export default function Chat() {
         return newlineFormattedMessage;
     }
 
+    useEffect(() => {
+        const updateWidth = () => {
+            const inputArea = document.getElementById("inputArea")
+            setInputAreaWidth(inputArea.offsetWidth - 70 - 16)
+        }
+
+        updateWidth()
+
+        const inputArea = document.getElementById("inputArea")
+        const resizeObserver = new ResizeObserver(updateWidth)
+        
+        if(inputArea) {
+            resizeObserver.observe(inputArea)
+        }
+
+        return () => {
+            if (inputArea) {
+                resizeObserver.disconnect()
+            }
+        }
+    }, [])
+
+    useEffect (() => {
+        const numPixels = 9 * inputValue.length
+        const newNumRows = Math.ceil(numPixels / inputAreaWidth)
+        if (newNumRows > 1) {
+            if (newNumRows < 6) {
+                setInputRows(newNumRows)
+            } else {
+                setInputRows(6)
+            }
+        }
+        else {
+            setInputRows(1)
+        }
+    }, [inputValue, inputAreaWidth])
+
     const handleTyping = (event) => {
-        setInputValue(event.target.value);
+        setInputValue(event.target.value)
     }
 
     return (
@@ -106,7 +145,7 @@ export default function Chat() {
                                     <div className={`chat-role ${message.user === "user" ? 'blue' : 'gray'} rounded-lg p-2`}>
                                         {message.user}
                                     </div>
-                                    <div className = {`rounded-lg p-2 text-left`} style={{alignContent: 'left'}}>
+                                    <div className = {`rounded-lg p-2 text-left`} style={{alignContent : 'left'}}>
                                         <div dangerouslySetInnerHTML={{ __html: formatGPTMessage(message.message) }} />
                                     </div>
                                 </div>
@@ -132,7 +171,7 @@ export default function Chat() {
                 <form onSubmit = {handleSubmit} className = "flex-none p-6">
                     <div style = {{position : "relative"}}>
                         <div className = "flex rounded-lg border border-white-700 bg-white-800">
-                            <textarea type = "text" className = "flex-grow px-4 py-2 focus:outline-none" disabled = {isLoading} style = {{backgroundColor : "white", color : "gray", borderRadius : "8px", paddingRight : "70px"}} placeholder = "" value = {inputValue} onChange = {handleTyping} />
+                            <textarea id = "inputArea" type = "text" className = "flex-grow px-4 py-2 focus:outline-none" disabled = {isLoading} style = {{fontFamily : "'Cerebri Sans', sans-serif", backgroundColor : "white", color : "gray", borderRadius : "8px", paddingRight : "70px"}} rows = {inputRows} placeholder = "" value = {inputValue} onChange = {handleTyping} />
                             <button
                             type = "submit"
                             className = "absolute right-0 top-0 bottom-0 m-auto rounded-lg px-4 py-2 font-semibold focus:outline-none hover:bg-purple-600 transition-colors duration-300"
