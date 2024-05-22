@@ -4,7 +4,7 @@ docker pull ollama/ollama
 # Build the main app image
 docker build -t grant_app .
 # Build separate image for dev for good measure
-docker build -t grant_app .
+docker build -t grant_app_dev .
 
 # Create the network
 docker network create django-ollama-service
