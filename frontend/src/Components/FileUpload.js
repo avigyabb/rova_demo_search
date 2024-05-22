@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { FaTrash } from 'react-icons/fa';
 import "../Styles/FileUpload.css"
 import { REACT_APP_API_URL } from "../consts";
+import CircularProgress from '@mui/material/CircularProgress';// Assuming you have Material-UI installed
 
 const FileUploadComponent = () => {
   const [files, setFiles] = useState([]);
+  const [pdfUrl, setPdfUrl] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -35,9 +40,14 @@ const FileUploadComponent = () => {
     }
   };
 
+  const handleClosePopup = () => {
+    setShowPopup(false);
+    window.location.reload();
+  };
+
   const handleUpload = async (event, isGrantApp) => {
     const newFiles = Array.from(event.target.files);
-
+    setIsLoading(true);
     for (const file of newFiles) {
       const formData = new FormData();
       formData.append('file', file);
@@ -47,14 +57,21 @@ const FileUploadComponent = () => {
           method: 'POST',
           body: formData,
         });
-        const result = await response.json();
-        console.log(result);
-
-        // Add the uploaded file data to the state
-        setFiles((prevFiles) => [...prevFiles, result]);
+        if (isGrantApp) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            setPdfUrl(url);
+            setShowPopup(true);
+          } else {
+            const result = await response.json();
+            console.log(result);
+            setFiles((prevFiles) => [...prevFiles, result]);
+          }
         
       } catch (error) {
         console.error('Error uploading files:', error);
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -68,7 +85,7 @@ const FileUploadComponent = () => {
         borderRight: '1px solid black', 
         overflowY: 'auto' 
       }}>
-        <label className="custom-file-input">
+        <label style={{margin: '20px'}} className="custom-file-input">
         Upload Research
         <input
           type="file"
@@ -96,16 +113,56 @@ const FileUploadComponent = () => {
             </ul>
           )}
         </div>
-        <label className="custom-file-input">
-        Upload Templates
-        <input
-          type="file"
-          multiple
-          onChange={(event) => handleUpload(event, 1)}
-          style={{ display: 'none' }}
-        />
-      </label>
-      </div>
+        <div style={{ position: 'fixed', bottom: '0', width: '100%', margin: '20px' }}>
+        <label style={{ background: "#fd7013", color: "white" }} className="custom-file-input">
+            {isLoading ? (
+                <div style={{color: 'white'}}>
+                <CircularProgress color="inherit"/>
+                </div>
+            ) : (
+                <strong>Draft Grant (upload a template to begin)</strong>
+            )}
+            <input
+                type="file"
+                multiple
+                onChange={(event) => handleUpload(event, 1)}
+                style={{ display: 'none' }}
+            />
+        </label>
+    </div>
+
+    {showPopup && (
+        <div style={{
+          position: 'fixed',
+          top: '47.5%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '80%',
+          height: '90%',
+          backgroundColor: 'white',
+          overflow: 'scroll',
+          zIndex: 1000,
+          boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+          padding: '37px',
+          boxSizing: 'border-box'
+        }}>
+          <iframe
+            src={pdfUrl}
+            style={{ width: '100%', height: '100%'}}
+            frameBorder="0"
+          />
+          <button
+            onClick={() => handleClosePopup()}
+            style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1001}}
+          >
+            Close
+          </button>
+          <a href={pdfUrl} download="grant_application.pdf" style={{ position: 'absolute', bottom: '10px', right: '10px', zIndex: 1001}}>
+            Download PDF
+          </a>
+        </div>
+      )}
+    </div>
   );
 };
 

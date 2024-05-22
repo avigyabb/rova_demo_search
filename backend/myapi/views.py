@@ -9,23 +9,24 @@ from rest_framework.generics import ListAPIView
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
-from openai import OpenAI
-import json
-import pdfplumber
 import chromadb
 import PyPDF2
 import docx
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import OllamaEmbeddings
-from .chat import respond_to_message
+from .chat import respond_to_message, extract_questions
 
 from langchain_community.chat_models import ChatOllama
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+from django.http import HttpResponse
 
-llm = ChatOllama(model = 'llama3', base_url="http://ollama:11434")
+llm = ChatOllama(model = 'qwen:0.5b') #base_url="http://ollama:11434"
 
-# Initialize the OpenAI client
-client = OpenAI(api_key='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') # this is for parsing templates, not used on actual data
-embeddings = OllamaEmbeddings(model="all-minilm", base_url="http://ollama:11434") # this is smallest model, probably not best for embeddings
+embeddings = OllamaEmbeddings(model="all-minilm") #base_url="http://ollama:11434" # this is smallest model, probably not best for embeddings
 # embeddings = OllamaEmbeddings(model="all-minilm")
 
 # Initialize ChromaDB Client
@@ -110,44 +111,21 @@ def parse_and_store_files(file_paths, ids):
     store_document_in_chromadb(documents)
 
 # Retrieve similar documents
-def retrieve_similar_documents(query, n_results=2):
+def retrieve_similar_documents(query, n_results=5):
     query_embedding = get_openai_embeddings([query])[0]
     results = collection.query(query_embedding, n_results=n_results)
     return results['documents']
 
-def extract_text_from_pdf(pdf_path):
-    page_texts = []
-    with pdfplumber.open(pdf_path) as pdf:
-        page_texts = [page.extract_text() for page in pdf.pages]
-        return " ".join(page_texts)
-
-def extract_questions(pdf_path):
-    text = extract_text_from_pdf(pdf_path)
-    # Make a completion request referencing the uploaded file
-    extraction_prompt = """ Given the following PDF text, \n 
-    BEGINNING OF PDF:  \n 
-    ********************************************************* \n
-    {} \n
-    ********************************************************* \n
-    END OF PDF \n, 
-    generate a JSON output which contains a list of 'Question' objects.
-    Each question should contain a 1) description of what the question is asking, 
-    2) any mention of word count limit or (None if no mention), must be an integer, no text and 
-    3) any mention of page limit (None if no mention), must be an integer, no text. 
-    Return a JSON object for all questions which require a essay or short-answer response. You should return a 
-    list of objects ONLY for those questions which require an essay/short-answer response.
-    Not for those which require factual details or few word responses. 
-    """.format(text)
-    completion = client.chat.completions.create(
-    model="gpt-4-1106-preview",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant that can read PDFs and extract the relevant requested information."},
-        {"role": "user", "content": extraction_prompt}
-    ],
-    response_format={"type": "json_object"}
-    )
-    questions = json.loads(completion.choices[0].message.content)
-    return questions
+def draft_from_questions(questions):
+  questions = questions['questions']
+  draft = dict()
+  for q in questions:
+    docs = retrieve_similar_documents(q['description'], n_results=20)
+    query = """Respond to the folowing question from a grant application using the given documents and context: {}""".format(q['description'])
+    response = respond_to_message(llm, query, docs)
+    draft[q['description']] = response
+  print(draft)
+  return draft
 
 class FileListView(ListAPIView):
     queryset = UploadedFile.objects.all()
@@ -171,10 +149,31 @@ class FileUploadView(APIView):
 
         serializer = UploadedFileSerializer(uploaded_file)
 
-        if(is_grantapp):
+        if is_grantapp:
             questions = extract_questions(full_file_path)
-            #parse_and_store_files([full_file_path], [uploaded_file.id])
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            draft = draft_from_questions(questions)
+            
+            # Create the PDF
+            buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter)
+            styles = getSampleStyleSheet()
+            elements = []
+
+            for question, answer in draft.items():
+                elements.append(Paragraph(f"<b>{question}:</b>", styles['Heading2']))
+                elements.append(Paragraph(answer, styles['BodyText']))
+                elements.append(Spacer(1, 12))  # Add space between questions
+
+            doc.build(elements)
+
+            buffer.seek(0)
+
+            # Return the PDF in the response
+            response = HttpResponse(buffer, content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="grant_application.pdf"'
+            uploaded_file.delete()
+            default_storage.delete(full_file_path)
+            return response
         else:
             parse_and_store_files([full_file_path], [uploaded_file.id])
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -183,6 +182,7 @@ class FileDeleteView(APIView):
     def delete(self, request, pk, *args, **kwargs):
         file = get_object_or_404(UploadedFile, pk=pk)
         file_path = file.file.path
+        default_storage.delete(file_path)
 
         if os.path.exists(file_path):
             os.remove(file_path)
