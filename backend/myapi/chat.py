@@ -4,9 +4,12 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from openai import OpenAI
 import pdfplumber
 from langchain import hub
+import os
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 
 prompt = hub.pull("hwchase17/openai-tools-agent")
+
+os.environ["OPENAI_API_KEY"] = "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"
 
 # Initialize the OpenAI client
 client = OpenAI() # this is for parsing templates, not used on actual data
