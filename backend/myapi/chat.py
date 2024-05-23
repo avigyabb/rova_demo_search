@@ -4,8 +4,9 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from openai import OpenAI
 import pdfplumber
 from langchain import hub
-from langchain.agents import AgentExecutor, create_json_chat_agent
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.agents import AgentExecutor, create_openai_tools_agent
+
+prompt = hub.pull("hwchase17/openai-tools-agent")
 
 # Initialize the OpenAI client
 client = OpenAI(api_key='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') # this is for parsing templates, not used on actual data
@@ -17,67 +18,23 @@ def extract_text_from_pdf(pdf_path):
         return " ".join(page_texts)
 
 def respond_to_message (llm, query, tools):
-
-    system="""
-    You are a helpful grant-writing assistant. Follow the commands and answer the questions provided by the user to assist them in drafting grant applications. Your responses should be represented by a markdown code snippet of a json blob.
-    The json structure should contain the following keys:
-    thought -> your thoughts
-    action -> name of a tool
-    action_input -> parameters to send to the tool
-
-    These are the tools you can use: {tool_names}.
-
-    These are the tools descriptions:
-
-    {tools}
-    If you have enough information to answer the query use the tool "Final Answer". Its parameters is the solution/answer to the query. You do not have to use a tool. In which case, directly respond to the user's query by calling "Final Answer".
-    """
-
-    human="""
-    Add the word "STOP" after each markdown snippet. Example:
-
-    ```json
-    {{"thought": "<your thoughts>",
-    "action": "<tool name or Final Answer to give a final answer>",
-    "action_input": "<tool parameters or the final output"}}
-    ```
-    STOP
-
-    This is my query="{input}". Answer the query. 
-    Remember to add STOP after each snippet.
-
-    These are the previous steps you took and the information you already gathered: 
-    """
-
-
-    prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", system),
-        MessagesPlaceholder("chat_history", optional=True),
-        ("human", human),
-        MessagesPlaceholder("agent_scratchpad"),
-    ]
-    )
-    
-    agent = create_json_chat_agent(tools=tools, llm=llm, prompt=prompt, stop_sequence=["STOP"], template_tool_response="{observation}") 
-    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, handle_parsing_errors=True)
+    agent = create_openai_tools_agent(llm, tools,prompt)
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
     all_messages = ChatHistory.objects.all()
     # message.user = 'user' or 'assistant'
     # message.message = str
-    # messages = [SystemMessage(content="You are a helpful grant-writing assistant. Follow the commands and answer the questions provided by the user to assist them in drafting grant applications.")]
-    messages = []
+    messages = [SystemMessage(content="You are a helpful grant-writing assistant. Follow the commands and answer the questions provided by the user to assist them in drafting grant applications.")]
     for message in all_messages:
         if message.user == 'user':
             messages.append(HumanMessage(content=message.message))
         elif message.user == 'assistant':
             messages.append(AIMessage(content=message.message))
     result = agent_executor.invoke({"input": query, "chat_history": messages})
-    print(result)
     # most_recent = f"Here is some helpful context: {documents}, my question is: {query}"
     # messages.append(HumanMessage(content=most_recent))
     #response = llm.invoke(messages)
-    return result["output"]['answer'] if 'answer' in result["output"] else  result["output"] #response.content
+    return result["output"] #response.content
 
 def extract_questions(pdf_path):
     text = extract_text_from_pdf(pdf_path)
