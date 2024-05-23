@@ -13,7 +13,7 @@ import chromadb
 import PyPDF2
 import docx
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import OllamaEmbeddings
+from langchain_community.embeddings import OllamaEmbeddings, OpenAIEmbeddings
 from .chat import respond_to_message, extract_questions, draft_from_questions
 
 from langchain_community.chat_models import ChatOllama
@@ -28,9 +28,11 @@ from langchain_core.retrievers import BaseRetriever
 from langchain_core.documents import Document
 from langchain.tools.retriever import create_retriever_tool
 
-llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, openai_api_key="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") #ChatOllama(model = 'qwen:0.5b') #base_url="http://ollama:11434"
+os.environ["OPENAI_API_KEY"] = "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"
 
-embeddings = OllamaEmbeddings(model="all-minilm") # base_url="http://ollama:11434" this is smallest model, probably not best for embeddings
+llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0) #ChatOllama(model = 'qwen:0.5b') #base_url="http://ollama:11434"
+
+embeddings = OpenAIEmbeddings(model="text-embedding-3-large") # base_url="http://ollama:11434" this is smallest model, probably not best for embeddings
 # embeddings = OllamaEmbeddings(model="all-minilm")
 
 # Initialize ChromaDB Client

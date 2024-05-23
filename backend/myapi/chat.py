@@ -9,7 +9,7 @@ from langchain.agents import AgentExecutor, create_openai_tools_agent
 prompt = hub.pull("hwchase17/openai-tools-agent")
 
 # Initialize the OpenAI client
-client = OpenAI(api_key='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') # this is for parsing templates, not used on actual data
+client = OpenAI() # this is for parsing templates, not used on actual data
 
 def extract_text_from_pdf(pdf_path):
     page_texts = []
