@@ -11,12 +11,15 @@ from django.core.files.base import ContentFile
 
 import chromadb
 import PyPDF2
+import pdfplumber
 import docx
+import json
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import OllamaEmbeddings, OpenAIEmbeddings
-from .chat import respond_to_message, extract_questions, draft_from_questions
+from langchain_openai import OpenAIEmbeddings
+from .chat import respond_to_message, draft_from_questions
 
 from langchain_community.chat_models import ChatOllama
+from openai import OpenAI
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
@@ -33,6 +36,8 @@ os.environ["OPENAI_API_KEY"] = "sk-9WfbHAI0GoMej9v5bU9eT3BlbkFJ3bowqC2pEv0TIjMEo
 llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0) #ChatOllama(model = 'qwen:0.5b') #base_url="http://ollama:11434"
 
 embeddings = OpenAIEmbeddings(model="text-embedding-3-large") # base_url="http://ollama:11434" this is smallest model, probably not best for embeddings
+client = OpenAI() # this is for parsing templates, not used on actual data
+
 # embeddings = OllamaEmbeddings(model="all-minilm")
 
 # Initialize ChromaDB Client
@@ -78,6 +83,13 @@ class ToolWrapper:
 
 tools = ToolWrapper().tools
 
+# extracts words from pdf
+def extract_text_from_pdf(pdf_path):
+    page_texts = []
+    with pdfplumber.open(pdf_path) as pdf:
+        page_texts = [page.extract_text() for page in pdf.pages]
+        return " ".join(page_texts)
+
 # OpenAI Embeddings 
 def get_openai_embeddings(texts):
     doc_result = embeddings.embed_documents(texts)
@@ -105,6 +117,44 @@ def read_docx(file_path):
 def chunk_text(sample):
     texts = custom_text_splitter.create_documents([sample])
     return texts
+
+def extract_questions(file_path):
+    if(file_path.endswith('.pdf')):
+        text = extract_text_from_pdf(file_path)
+    elif(file_path.endswith('.docx')):
+        text = read_docx(file_path)
+    # Make a completion request referencing the uploaded file
+    extraction_prompt = """ Given the following PDF text, \n 
+    BEGINNING OF PDF:  \n 
+    ********************************************************* \n
+    {} \n
+    ********************************************************* \n
+    END OF PDF \n, 
+    generate a JSON output which contains a list of 'Question' objects.
+    Each question should contain a 1) description of what the question is asking, 
+    2) any mention of word count limit or (None if no mention), must be an integer, no text and 
+    3) any mention of page limit (None if no mention), must be an integer, no text. 
+    Return a JSON object for all questions which require a essay or short-answer response. You should return a 
+    list of objects ONLY for those questions which require an essay/short-answer response. You may re-word the question to make it more verbose, 
+    it should be clear what the question is asking so an LLM could answer it correctly.
+    Not for those which require factual details or few word responses. 
+    """.format(text)
+    example = """\nYour return should be a JSON object for example a document with 1 question might produce the following output: \n
+    {'questions':[\n
+        {"description": "Describe your organization or project goals", "word_limit": 1000, "page_limit": 3},\n
+    ]}"""
+    extraction_prompt += example
+    completion = client.chat.completions.create(
+    model="gpt-4-1106-preview",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant that can read PDFs and extract the relevant requested information in JSON. \
+         You must follow the users instructions without adding any unwanted elements or keys to the final json object."},
+        {"role": "user", "content": extraction_prompt}
+    ],
+    response_format={"type": "json_object"}
+    )
+    questions = json.loads(completion.choices[0].message.content)
+    return questions
 
 class ChromaManager():
     def __init__(self, collection):
