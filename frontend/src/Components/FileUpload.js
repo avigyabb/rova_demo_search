@@ -3,7 +3,7 @@ import { FaTrash } from 'react-icons/fa';
 import "../Styles/FileUpload.css"
 import { REACT_APP_API_URL } from "../consts";
 import CircularProgress from '@mui/material/CircularProgress';// Assuming you have Material-UI installed
-import Form from './Form';
+import Form from './Form.js';
 
 const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFileIds }) => {
   const [files, setFiles] = useState([]);
