@@ -2,8 +2,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import UploadedFile, ChatHistory
-from .serializers import UploadedFileSerializer, ChatHistorySerializer
+from .models import UploadedFile, ChatHistory, ChatSession
+from .serializers import UploadedFileSerializer, ChatHistorySerializer, ChatSessionSerializer
 import os
 from rest_framework.generics import ListAPIView
 from django.core.files.storage import default_storage
@@ -30,6 +30,8 @@ from langchain_openai import ChatOpenAI
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.documents import Document
 from langchain.tools.retriever import create_retriever_tool
+
+import pandas as pd
 
 os.environ["OPENAI_API_KEY"] = "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"
 
@@ -65,6 +67,7 @@ class ChromaRetriever(BaseRetriever):
     def _retrieve_similar_documents_(self, query):
         query_embedding = get_openai_embeddings([query])[0]
         results = collection.query(query_embedding, n_results=self.k)
+        print(results)
         return [Document(page_content=chunk) for chunk in results['documents'][0]]
 
     def _get_relevant_documents(self, query: str):
@@ -265,28 +268,52 @@ class FileDeleteView(APIView):
 
         file.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
-class ChatHistoryView(ListAPIView):
-    queryset = ChatHistory.objects.all()
-    serializer_class = ChatHistorySerializer
 
-# deletes the entire chat history
-class ChatHistoryDeleteView(APIView):
-    def delete(self, request, *args, **kwargs): 
-        ChatHistory.objects.all().delete()
+# delete a chat session
+class ChatSessionDeleteView(APIView):
+    def delete(self, request, pk, *args, **kwargs):
+        session = get_object_or_404(ChatSession, pk=pk)
+        session.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+# gets chat history for a given session
+class ChatHistoryView(APIView):
+    def get(self, request, *args, **kwargs):
+        session_id = request.query_params.get("session_id")
+        try:
+            chat_session = ChatSession.objects.get(id=session_id)
+            chat_history = ChatHistory.objects.filter(session=chat_session)
+            serializer = ChatHistorySerializer(chat_history, many=True)
+            return Response(serializer.data)
+        except ChatSession.DoesNotExist:
+            return Response({"error": "Chat session not found"}, status=404)
+
 
 class LlmModelView(APIView):
     def post(self, request, *args, **kwargs):
         # Save message in chat history
         message = request.data.get("body")
-        chat_history = ChatHistory(user="user", message=message)
+        session_id = request.data.get("session_id")
+        chat_session = ChatSession.objects.get(id=session_id)
+
+        chat_history = ChatHistory(user="user", message=message, session=chat_session)
         chat_history.save()
 
-        response = respond_to_message(llm, message, tools)
+        response = respond_to_message(llm, message, tools, chat_session)
 
         # Save response in chat history
-        chat_history = ChatHistory(user="assistant", message=response)
+        chat_history = ChatHistory(user="assistant", message=response, session=chat_session)
         chat_history.save()
         return Response({"response" : response})
-    
+
+class ChatSessionView(ListAPIView):
+    queryset = ChatSession.objects.all()
+    serializer_class = ChatSessionSerializer
+
+# add new Chat Session
+class ChatSessionCreateView(APIView):
+    def post(self, request, *args, **kwargs):
+        name = request.data.get("body")
+        session = ChatSession(name=name)
+        session.save()
+        return Response(status=status.HTTP_201_CREATED)

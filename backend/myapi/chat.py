@@ -8,11 +8,11 @@ from langchain.agents import AgentExecutor, create_openai_tools_agent
 prompt = hub.pull("hwchase17/openai-tools-agent")
 
 
-def respond_to_message (llm, query, tools):
+def respond_to_message (llm, query, tools, chat_session):
     agent = create_openai_tools_agent(llm, tools,prompt)
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-    all_messages = ChatHistory.objects.all()
+    all_messages = ChatHistory.objects.filter(session=chat_session)
     # message.user = 'user' or 'assistant'
     # message.message = str
     messages = [SystemMessage(content="You are a helpful grant-writing assistant. Follow the commands and answer the questions provided by the user to assist them in drafting grant applications.")]

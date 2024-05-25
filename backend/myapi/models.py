@@ -8,10 +8,19 @@ class UploadedFile(models.Model):
     def __str__(self):
         return self.filename
     
+# Model to store chat sessions
+class ChatSession(models.Model):
+    name = models.CharField(max_length=255)
+    last_updated = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+    
 # Model to store chat history
 class ChatHistory(models.Model):
     user = models.CharField(max_length=255)
     message = models.TextField()
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='chats')
 
     def __str__(self):
         return self.user

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UploadedFile, ChatHistory
+from .models import UploadedFile, ChatHistory, ChatSession
 
 class UploadedFileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,4 +10,10 @@ class ChatHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatHistory
         fields = ['user', 'message']
+
+class ChatSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatSession
+        fields = ['id', 'name', 'last_updated']
+
 

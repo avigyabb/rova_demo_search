@@ -17,4 +17,33 @@
   .custom-file-input:hover {
     background-color: lightgray;
   }
-  
+
+/* FileUpload.css */
+.session-button {
+  background-color: transparent;
+  color: black;
+  transition: background-color 0.3s;
+  padding: 5px 0;
+  margin: 0;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+}
+
+.session-button:hover {
+  background-color: #e0e0e0;
+}
+
+.session-button.selected {
+  background-color: #d0d0d0;
+}
+
+ul {
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  margin: 0;
+}
