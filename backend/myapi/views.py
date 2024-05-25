@@ -188,15 +188,13 @@ class ChromaManager():
         with driver.session() as session:
             print(x)
             # Cypher query to delete nodes with a specific source_id
-            # Cypher query to delete nodes with a specific source_id and all connected nodes
             query = """
             MATCH (start {source_id: $source_id})
-            CALL {
-                WITH start
-                MATCH (start)-[*0..]-(connected)
-                RETURN DISTINCT connected
-            }
-            DETACH DELETE connected;
+            WITH start
+            MATCH (start)-[*0..]-(connected)
+            WITH COLLECT(DISTINCT connected) AS connectedNodes, start
+            UNWIND connectedNodes + start AS nodeToDelete
+            DETACH DELETE nodeToDelete
             """
             # Execute the query
             result = session.run(query, source_id=x)
@@ -342,7 +340,8 @@ class FileDeleteView(APIView):
             os.remove(file_path)
         try:
             chroma_manager.delete_from_chromadb(pk)
-        except:
+        except Exception as e:
+            print(e)
             pass
 
         file.delete()

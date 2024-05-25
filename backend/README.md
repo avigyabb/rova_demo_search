@@ -29,3 +29,13 @@ docker stop $(docker ps -a -q)
 sudo su
 su root
 chmod 664 privkey.pem
+
+# Start Neo4j instance
+docker run \
+    --restart always \
+    --publish=7474:7474 --publish=7687:7687 \
+    --volume=$HOME/neo4j/plugins:/plugins \
+    --env NEO4J_AUTH=neo4j/amboralabs \
+    --env 'NEO4J_dbms_security_procedures_unrestricted=apoc.*' \
+    --env NEO4JLABS_PLUGINS='["apoc"]' \
+    neo4j:5.19.0
