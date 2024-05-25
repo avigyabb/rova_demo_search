@@ -3,12 +3,15 @@ import { FaTrash } from 'react-icons/fa';
 import "../Styles/FileUpload.css"
 import { REACT_APP_API_URL } from "../consts";
 import CircularProgress from '@mui/material/CircularProgress';// Assuming you have Material-UI installed
+import Form from './Form';
 
-const FileUploadComponent = () => {
+const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFileIds }) => {
   const [files, setFiles] = useState([]);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [inputs, setInputs] = useState(['']);
 
 
   useEffect(() => {
@@ -17,6 +20,7 @@ const FileUploadComponent = () => {
         const response = await fetch(REACT_APP_API_URL + 'files/');
         const result = await response.json();
         setFiles(result);
+        setSelectedFileIds(JSON.parse(localStorage.getItem('selectedFileIds')));
       } catch (error) {
         console.error('Error fetching files:', error);
       }
@@ -32,6 +36,7 @@ const FileUploadComponent = () => {
       });
       if (response.status === 204) {
         setFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
+        setSelectedFileIds(prevIds => prevIds.filter(id => id !== fileId));
       } else {
         console.error('Error deleting file');
       }
@@ -40,43 +45,87 @@ const FileUploadComponent = () => {
     }
   };
 
+  const toggleFileSelection = (fileId) => {
+    setSelectedFileIds(prevIds =>
+      prevIds.includes(fileId)
+        ? prevIds.filter(id => id !== fileId)
+        : [...prevIds, fileId]
+    );
+  };
+
   const handleClosePopup = () => {
     setShowPopup(false);
     window.location.reload();
   };
 
   const handleUpload = async (event, isGrantApp) => {
-    const newFiles = Array.from(event.target.files);
+    if(isGrantApp){
+        toggleOverlay();
+    }
     setIsLoading(true);
-    for (const file of newFiles) {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      try {
-        const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
-          method: 'POST',
-          body: formData,
+    if(!event && isGrantApp) {
+        const formData = new FormData();
+        formData.append('selectedFileIds', JSON.stringify(selectedFileIds));
+        formData.append('questions', JSON.stringify(inputs));
+        formData.append('chat_session', JSON.stringify(selectedSession.id));
+        try {
+            const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
+                method: 'POST',
+                body: formData,
+            
         });
-        if (isGrantApp) {
             const blob = await response.blob();
             const url = URL.createObjectURL(blob);
             setPdfUrl(url);
             setShowPopup(true);
-          } else {
-            const result = await response.json();
-            console.log(result);
-            setFiles((prevFiles) => [...prevFiles, result]);
-          }
-        
-      } catch (error) {
-        console.error('Error uploading files:', error);
-      } finally {
-        setIsLoading(false);
-      }
+        } catch (error) {
+            console.error('Error communicating questions files:', error);
+        } finally {
+            setIsLoading(false);
+        }
+        return;
+    } else {
+        const newFiles = Array.from(event.target.files);
+        for (const file of newFiles) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('selectedFileIds', JSON.stringify(selectedFileIds));
+        formData.append('questions', JSON.stringify(inputs));
+        formData.append('chat_session', JSON.stringify(selectedSession.id));
+        try {
+            const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
+            method: 'POST',
+            body: formData,
+            });
+            if (isGrantApp) {
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                setPdfUrl(url);
+                setShowPopup(true);
+            } else {
+                const result = await response.json();
+                console.log(result);
+                setFiles((prevFiles) => [...prevFiles, result]);
+                setSelectedFileIds(prevIds => [...prevIds, result.id]); // Auto-select new file
+            }
+            
+            } catch (error) {
+                console.error('Error uploading files:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
     }
   };
-  
 
+  const toggleOverlay = () => {
+    setShowOverlay(!showOverlay);
+  };
+
+  const submitForm = () => {
+    handleUpload(null, 1);
+  };
+  
   return (
       <div style={{ 
         width: '300px', 
@@ -100,15 +149,21 @@ const FileUploadComponent = () => {
           {files.length === 0 ? (
             <p>No files uploaded yet.</p>
           ) : (
-            <ul style={{ paddingLeft: '20px', marginTop: '10px' }}>
+            <ul style={{ paddingLeft: '0px', marginTop: '10px' }}>
               {files.map((file) => (
-                <li key={file.filename} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.filename}</span>
-                  <FaTrash 
-                    style={{ cursor: 'pointer', color: 'red', flexShrink: 0 }} 
-                    onClick={() => handleDelete(file.id)} 
-                  />
-                </li>
+                <li key={file.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <input
+                  type="checkbox"
+                  checked={selectedFileIds.includes(file.id)}
+                  onChange={() => toggleFileSelection(file.id)}
+                  style={{ marginRight: '10px' }}
+                />
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.filename}</span>
+                <FaTrash 
+                  style={{ cursor: 'pointer', color: 'red', flexShrink: 0 }} 
+                  onClick={() => handleDelete(file.id)} 
+                />
+              </li>
               ))}
             </ul>
           )}
@@ -120,7 +175,18 @@ const FileUploadComponent = () => {
                 <CircularProgress color="inherit"/>
                 </div>
             ) : (
-                <strong>Draft Grant (upload a template to begin)</strong>
+                <div>
+                <button onClick={toggleOverlay}>Draft Grant</button>
+                {showOverlay && (
+                <Form
+                    onClose={toggleOverlay}
+                    handleUpload={handleUpload}
+                    submitForm={submitForm}
+                    inputs={inputs}
+                    setInputs={setInputs}
+                />
+                )}
+                </div>
             )}
             <input
                 type="file"
@@ -129,6 +195,7 @@ const FileUploadComponent = () => {
                 style={{ display: 'none' }}
             />
         </label>
+
     </div>
 
     {showPopup && (

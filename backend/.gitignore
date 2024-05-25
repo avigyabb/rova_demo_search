@@ -1,1 +1,4 @@
 *.pyc
+/chroma
+/uploads
+db.sqlite3

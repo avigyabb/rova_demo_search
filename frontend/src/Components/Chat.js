@@ -3,7 +3,7 @@ import axios from 'axios';
 import "../Styles/Chat.css";
 import { REACT_APP_API_URL } from "../consts";
 
-export default function Chat({ selectedSession }) {
+export default function Chat({ selectedSession, selectedFileIds, setSelectedFileIds}) {
   const [inputValue, setInputValue] = useState("");
   const [chatLog, setChatLog] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +49,8 @@ export default function Chat({ selectedSession }) {
         await axios.post(REACT_APP_API_URL + "send-message/", {
           body: inputValue,
           session_id: selectedSession.id,
+          file_ids: JSON.stringify(selectedFileIds)
+          
         });
         setIsLoading(false);
         setChatLog(chatLog.slice(0, -1));

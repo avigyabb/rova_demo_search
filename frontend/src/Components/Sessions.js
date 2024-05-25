@@ -1,20 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Tabs, Tab, Box, IconButton, CircularProgress, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close'; // Import close icon for deletion
 import "../Styles/FileUpload.css";
 import { REACT_APP_API_URL } from "../consts";
-import CircularProgress from '@mui/material/CircularProgress'; // Assuming you have Material-UI installed
 
 const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [value, setValue] = useState(0); // State to track the current tab
+
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+    const session = sessions[newValue];
+    setSelectedSession(session);
+    fetchChat(session.id);
+  };
 
   const fetchSessions = async () => {
     try {
       const response = await fetch(REACT_APP_API_URL + 'chat-sessions/');
       const result = await response.json();
-      setSessions(result);
+      setSessions(result.map((session, index) => ({ ...session, name: `Chat#${index + 1}` })));
       if (result.length > 0) {
-        const latestSession = result[result.length - 1];
+        const latestSession = result[0];
         setSelectedSession(latestSession);
         fetchChat(); // Fetch chat history for the latest session
       }
@@ -38,65 +48,53 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
     }
   };
 
-  const handleDeleteSession = async (sessionId) => {
+  const handleDeleteSession = async (sessionId, event) => {
+    event.stopPropagation(); // Prevent tab switch when clicking delete
     try {
-        const response = await fetch(REACT_APP_API_URL + `delete-chat-session/${sessionId}/`, {
-          method: 'DELETE',
-        });
-        if (response.status === 204) {
-            fetchSessions();
-        }
-      } catch (error) {
-        console.error('Error deleting file:', error);
+      const response = await axios.delete(REACT_APP_API_URL + `delete-chat-session/${sessionId}/`);
+      if (response.status === 204) {
+        await fetchSessions();
       }
+    } catch (error) {
+      console.error('Error deleting session:', error);
+    }
   };
 
   useEffect(() => {
     fetchSessions();
   }, []);
 
-  const handleSessionClick = (session) => {
-    setSelectedSession(session);
-    fetchChat(session.id); // Fetch chat history for the selected session
-    console.log("Session clicked:", session);
-  };
-
   return (
-    <div style={{
-      width: '250px',
-      backgroundColor: '#f0f0f0',
-      padding: '20px',
-      borderRight: '1px solid black',
-      overflowY: 'auto'
-    }}>
-      <button onClick={handleNewChat} style={{ margin: '0px' }} className="custom-file-input">New Chat</button>
-      <div style={{ marginTop: '20px' }}>
-        <h1 style={{ fontWeight: 'bold' }}>Chat Sessions</h1>
-        {loading ? (
-          <CircularProgress />
-        ) : (
-          <ul style={{ padding: '0', listStyleType: 'none', margin: '0' }}>
-            {sessions.slice().reverse().map((session, index) => (
-              <li key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0', padding: '0' }}>
-                <button 
-                  onClick={() => handleSessionClick(session)} 
-                  className={`session-button ${selectedSession === session ? 'selected' : ''}`}
-                  style={{ flexGrow: 1 }}
-                >
-                  {session.name}
-                </button>
-                <button 
-                  onClick={() => handleDeleteSession(session.id)} 
-                  style={{ marginLeft: '10px', backgroundColor: 'red', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer' }}
-                >
-                  delete
-                </button>
-              </li>
+    <Box sx={{ borderBottom: 1, borderColor: 'divider', width: '100%', display: 'flex', alignItems: 'center' }}>
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <>
+          <Tabs value={value} onChange={handleChange} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile>
+            {sessions.map((session, index) => (
+              <Tab
+                key={session.id}
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Typography variant="body2" sx={{ flexGrow: 1 }}>
+                      {session.name}
+                    </Typography>
+                    <IconButton
+                      onClick={(event) => handleDeleteSession(session.id, event)}
+                      size="small"
+                      sx={{ ml: 1, p: 0, '&:hover': { backgroundColor: 'transparent' } }}
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  </Box>
+                }
+              />
             ))}
-          </ul>
-        )}
-      </div>
-    </div>
+          </Tabs>
+          <IconButton onClick={handleNewChat} sx={{ ml: 1 }}><AddIcon /></IconButton>
+        </>
+      )}
+    </Box>
   );
 };
 

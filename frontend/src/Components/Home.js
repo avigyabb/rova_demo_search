@@ -7,6 +7,7 @@ import Sessions from './Sessions.js';
 
 function Home() {
   const [selectedSession, setSelectedSession] = useState(null);
+  const [selectedFileIds, setSelectedFileIds] = useState(localStorage.getItem('selectedFileIds') ? JSON.parse(localStorage.getItem('selectedFileIds')) : []);
   const chatRef = useRef(null);
 
   useEffect(() => {
@@ -20,16 +21,23 @@ function Home() {
     }
   };
 
+  useEffect(() => {
+    // Save to localStorage when selectedFileIds changes
+    localStorage.setItem('selectedFileIds', JSON.stringify(selectedFileIds));
+  }, [selectedFileIds]);
+
   return (
-    <div style={{ display: "flex", height: '100vh', width: "100%" }}>
-      <div style={{ width: "250px", display: "flex" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: '100vh', width: "100%" }}>
+      <div style={{ width: "100%" }}>
         <Sessions selectedSession={selectedSession} setSelectedSession={setSelectedSession} fetchChat={fetchChat} />
       </div>
-      <div style={{ maxWidth: "100% - 300px", flexGrow: 1, overflowX: "auto" }}>
-        <Chat ref={chatRef} selectedSession={selectedSession} />
-      </div>
-      <div style={{ width: "300px", display: "flex" }}>
-        <FileUploadComponent />
+      <div style={{ display: "flex", flexGrow: 1 }}>
+        <div style={{ width: "300px", display: "flex" }}>
+          <FileUploadComponent selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} />
+        </div>
+        <div style={{ flexGrow: 1, overflowX: "auto" }}>
+          <Chat ref={chatRef} selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} />
+        </div>
       </div>
     </div>
   );

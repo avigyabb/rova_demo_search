@@ -8,20 +8,17 @@ import os
 from rest_framework.generics import ListAPIView
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+import asyncio
+import threading
+import json
 
 import chromadb
-import PyPDF2
-import pdfplumber
-import docx
-import json
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
-from .chat import respond_to_message, draft_from_questions
+from .chat import respond_to_message, draft_from_questions, format_data
+from .utils import get_openai_embeddings, read_pdf, read_docx, chunk_text, extract_questions, clear_neo4j
 
-from langchain_community.chat_models import ChatOllama
 from openai import OpenAI
 from io import BytesIO
-from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
@@ -30,17 +27,34 @@ from langchain_openai import ChatOpenAI
 from langchain_core.retrievers import BaseRetriever
 from langchain_core.documents import Document
 from langchain.tools.retriever import create_retriever_tool
-
+from langchain_experimental.graph_transformers import LLMGraphTransformer
+from langchain_community.graphs import Neo4jGraph
+from langchain_community.vectorstores import Neo4jVector
+from neo4j import GraphDatabase
 import pandas as pd
 
+os.environ["NEO4J_URI"] = "neo4j+s://497bdb9e.databases.neo4j.io"
+os.environ["NEO4J_USERNAME"] = "neo4j"
+os.environ["NEO4J_PASSWORD"] = "aRT0PlT235Yy4sM8dEAvtLiQATPt1U83en1gyMX5t8s"
 os.environ["OPENAI_API_KEY"] = "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"
 
+NODES = ["Person", "County", "Organization", "Initiative", "Grant", "Demography", "Benificiaries"]
+RELATIONSHIPS = ["LOCATED_IN", "HELPS", "FUNDING_FOR", "SUPPORTING_RESEARCH"]
+PROPS = ["text"]
+
+driver = GraphDatabase.driver(os.environ["NEO4J_URI"], auth=(os.environ["NEO4J_USERNAME"], os.environ["NEO4J_PASSWORD"]))
 llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0) #ChatOllama(model = 'qwen:0.5b') #base_url="http://ollama:11434"
+llm_transformer_filtered = LLMGraphTransformer(
+    llm=llm,
+    allowed_nodes=NODES,
+    allowed_relationships=RELATIONSHIPS,
+    node_properties=PROPS,
+    strict_mode=True
+)
+graph = Neo4jGraph()
 
-embeddings = OpenAIEmbeddings(model="text-embedding-3-large") # base_url="http://ollama:11434" this is smallest model, probably not best for embeddings
+embeddings_client = OpenAIEmbeddings(model="text-embedding-3-large") # base_url="http://ollama:11434" this is smallest model, probably not best for embeddings
 client = OpenAI() # this is for parsing templates, not used on actual data
-
-# embeddings = OllamaEmbeddings(model="all-minilm")
 
 # Initialize ChromaDB Client
 chroma_client = chromadb.PersistentClient(path="./chroma")
@@ -49,139 +63,170 @@ try:
 except:
     collection = chroma_client.create_collection(name="grant_docs")
 
-# Initialize the text splitter with custom parameters
-custom_text_splitter = RecursiveCharacterTextSplitter(
-    # Set custom chunk size
-    chunk_size = 256,
-    chunk_overlap  = 16,
-    # Use length of the text as the size measure
-    length_function = len,
-    )
-
 class ChromaRetriever(BaseRetriever):
     """List of documents to retrieve from."""
     k: int
+    selectedFileIds: list
     """Number of top results to return"""
 
+    def update_selection(self, selectedFileIds):
+        self.selectedFileIds = selectedFileIds
     # Retrieve similar documents
     def _retrieve_similar_documents_(self, query):
-        query_embedding = get_openai_embeddings([query])[0]
-        results = collection.query(query_embedding, n_results=self.k)
-        print(results)
-        return [Document(page_content=chunk) for chunk in results['documents'][0]]
+        query_embedding = get_openai_embeddings([query], embeddings_client)[0]
+        if(len(self.selectedFileIds) > 0):
+            results = collection.query(query_embedding, n_results=self.k, where={"source_id": {"$in": self.selectedFileIds}})
+        else:
+            results = []#collection.query(query_embedding, n_results=self.k)
+        if(len(results) > 0):
+            return [Document(page_content=chunk) for chunk in results['documents'][0]] # add meta_data here?
+        else:
+            return []
+
+    def _get_relevant_documents(self, query: str):
+        return self._retrieve_similar_documents_(query)
+
+class Neo4jRetriever(BaseRetriever):
+
+    k: int
+    selectedFileIds: list
+
+    def update_selection(self, selectedFileIds):
+        self.selectedFileIds = selectedFileIds
+    def _get_neighborhood_(self, page_content):    
+     with driver.session() as session:
+        result = session.run("""
+        MATCH (n:Initiative)
+        WHERE n.text = $pageContent AND n.source_id IN $source_ids
+        OPTIONAL MATCH (n)-[r]-(m)
+        RETURN 
+            labels(n) AS nodeLabels,
+            n.text AS nodeText,
+            n.id AS nodeId,
+            collect({
+                relationType: type(r),
+                neighborLabels: labels(m),
+                neighborText: m.text,
+                neighborId: m.id
+            }) AS neighborhood
+        """, {'source_ids': self.selectedFileIds, 'pageContent': page_content})
+        # Immediately consume the results in a list comprehension or similar structure
+        neighborhood_data = [{
+            "nodeLabels": record["nodeLabels"],
+            "nodeText": record["nodeText"],
+            "nodeId": record["nodeId"],
+            "neighborhood": record["neighborhood"]
+        } for record in result]
+        return neighborhood_data
+
+        
+    # Retrieve similar documents
+    def _retrieve_similar_documents_(self, query):
+
+        vector_index = Neo4jVector.from_existing_graph(
+            url = os.environ["NEO4J_URI"], 
+            username = os.environ["NEO4J_USERNAME"],
+            password = os.environ["NEO4J_PASSWORD"],
+            database="neo4j",
+            embedding=embeddings_client,
+            search_type="hybrid",
+            node_label="Initiative", # Central node
+            text_node_properties=PROPS,
+            embedding_node_property="embedding",
+        )
+
+        result = vector_index.similarity_search(query, self.k)
+        documents = []
+        for record in result:
+            text = record.page_content.split("text:", 1)[1].strip()
+            records = self._get_neighborhood_(text) # gets 1-hop neighbors, next step could be to get multi-hop neighbors (neighbors of neighbors)
+            for record in records:
+                out = format_data(record['nodeLabels'], record['nodeId'],record['nodeText'], record['neighborhood'])
+                documents.append(Document(page_content=out))
+        return documents
 
     def _get_relevant_documents(self, query: str):
         return self._retrieve_similar_documents_(query)
 
 class ToolWrapper:
     def __init__(self):
-        retriever = ChromaRetriever(k=5)
+        pass
+    def update(self, selectedFileIds): 
+        retriever = ChromaRetriever(k=10, selectedFileIds=[])
+        retriever.update_selection(selectedFileIds)
         # tools
-        tool = create_retriever_tool(
+        self.simple_search_tool = create_retriever_tool(
             retriever,
-            "search_docs",
-            "Searches and returns excerpts from the documents that have uploaded by the user.",
-            )
-        self.tools = [tool]
+            "search_documents",
+            "Searches and returns excerpts from the documents that have uploaded by the user. Useful for extracting details about specific entities, typically only those contained within a single document. "
+        )
+        graph_retriever = Neo4jRetriever(k=10, selectedFileIds=[])
+        graph_retriever.update_selection(selectedFileIds)
+        self.graph_retrieval_tool = create_retriever_tool(
+            graph_retriever,
+            "search_graph",
+            "Searches across a knowledge graph of documents to reveal relationships and information useful for answering broad queries. Useful for planning long-form answers and pulling pieces of evidence from multiple documents."
+        )
+        self.tools = [self.simple_search_tool, self.graph_retrieval_tool]
+        return self.tools
 
-tools = ToolWrapper().tools
-
-# extracts words from pdf
-def extract_text_from_pdf(pdf_path):
-    page_texts = []
-    with pdfplumber.open(pdf_path) as pdf:
-        page_texts = [page.extract_text() for page in pdf.pages]
-        return " ".join(page_texts)
-
-# OpenAI Embeddings 
-def get_openai_embeddings(texts):
-    doc_result = embeddings.embed_documents(texts)
-    return doc_result
-
-# Function to read content from PDF files
-def read_pdf(file_path):
-    content = ""
-    with open(file_path, "rb") as file:
-        reader = PyPDF2.PdfReader(file)
-        for page_num in range(len(reader.pages)):
-            page = reader.pages[page_num]
-            content += page.extract_text()
-    return content
-
-# Function to read content from DOCX files
-def read_docx(file_path):
-    doc = docx.Document(file_path)
-    content = ""
-    for paragraph in doc.paragraphs:
-        content += paragraph.text
-    return content
-
-# Function to chunk text using langchain's text_splitter
-def chunk_text(sample):
-    texts = custom_text_splitter.create_documents([sample])
-    return texts
-
-def extract_questions(file_path):
-    if(file_path.endswith('.pdf')):
-        text = extract_text_from_pdf(file_path)
-    elif(file_path.endswith('.docx')):
-        text = read_docx(file_path)
-    # Make a completion request referencing the uploaded file
-    extraction_prompt = """ Given the following PDF text, \n 
-    BEGINNING OF PDF:  \n 
-    ********************************************************* \n
-    {} \n
-    ********************************************************* \n
-    END OF PDF \n, 
-    generate a JSON output which contains a list of 'Question' objects.
-    Each question should contain a 1) description of what the question is asking, 
-    2) any mention of word count limit or (None if no mention), must be an integer, no text and 
-    3) any mention of page limit (None if no mention), must be an integer, no text. 
-    Return a JSON object for all questions which require a essay or short-answer response. You should return a 
-    list of objects ONLY for those questions which require an essay/short-answer response. You may re-word the question to make it more verbose, 
-    it should be clear what the question is asking so an LLM could answer it correctly.
-    Not for those which require factual details or few word responses. 
-    """.format(text)
-    example = """\nYour return should be a JSON object for example a document with 1 question might produce the following output: \n
-    {'questions':[\n
-        {"description": "Describe your organization or project goals", "word_limit": 1000, "page_limit": 3},\n
-    ]}"""
-    extraction_prompt += example
-    completion = client.chat.completions.create(
-    model="gpt-4-1106-preview",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant that can read PDFs and extract the relevant requested information in JSON. \
-         You must follow the users instructions without adding any unwanted elements or keys to the final json object."},
-        {"role": "user", "content": extraction_prompt}
-    ],
-    response_format={"type": "json_object"}
-    )
-    questions = json.loads(completion.choices[0].message.content)
-    return questions
+tools = ToolWrapper()
 
 class ChromaManager():
     def __init__(self, collection):
         self.collection = collection
+        self.loop = asyncio.new_event_loop()
+        threading.Thread(target=self.start_loop, daemon=True).start()
+    
+    def start_loop(self):
+        asyncio.set_event_loop(self.loop)
+        self.loop.run_forever()
 
     # Function to delete from chroma db given id
     def delete_from_chromadb(self, x):
-        # Retrieve all entries from the collection
-        all_entries = self.collection.get()  # Assuming collection.get() retrieves all entries
-        ids = all_entries['ids']
-        to_delete = [id for id in ids if id.split("_")[0].strip() in x]
-        self.collection.delete(ids=to_delete)
+        self.collection.delete(where={"source_id": x})
+        with driver.session() as session:
+            print(x)
+            # Cypher query to delete nodes with a specific source_id
+            # Cypher query to delete nodes with a specific source_id and all connected nodes
+            query = """
+            MATCH (start {source_id: $source_id})
+            CALL {
+                WITH start
+                MATCH (start)-[*0..]-(connected)
+                RETURN DISTINCT connected
+            }
+            DETACH DELETE connected;
+            """
+            # Execute the query
+            result = session.run(query, source_id=x)
+            print(f"Nodes deleted: {result.consume().counters.nodes_deleted}")
     
     # Function to store documents in ChromaDB
     def store_document_in_chromadb(self, documents):
-        embeddings = get_openai_embeddings([doc['content'] for doc in documents])
+        embeddings = get_openai_embeddings([doc['content'] for doc in documents], embeddings_client)
         ids = [doc['id'] for doc in documents]
         contents = [doc['content'] for doc in documents]
-
         self.collection.upsert(
             ids=ids,
             embeddings=embeddings,
             documents=contents,
+            metadatas=[{"source_id": doc["source_id"]} for doc in documents],
         )
+
+    async def convert_to_graph_documents_and_process(self, chunks, idx):
+        graph_chunks_filtered = await llm_transformer_filtered.aconvert_to_graph_documents(chunks)
+        for i in range(len(graph_chunks_filtered)):
+            nodes = graph_chunks_filtered[i].nodes
+            for node in nodes:
+                node.properties["source_id"] = idx
+            print(f"Nodes:{graph_chunks_filtered[i].nodes}")
+            print(f"Relationships:{graph_chunks_filtered[i].relationships}")
+        graph.add_graph_documents(graph_chunks_filtered, include_source=True)
+
+    #Shared event loop
+    def handle_graph_conversion(self, chunks, idx):
+        asyncio.run_coroutine_threadsafe(self.convert_to_graph_documents_and_process(chunks, idx), self.loop)
 
     # Function to parse and store files in ChromaDB
     def parse_and_store_files(self, file_paths, ids):
@@ -195,10 +240,13 @@ class ChromaManager():
                 continue
             chunks = chunk_text(content)
             for jdx, chunk in enumerate(chunks):
-                doc_id = str(ids[idx])+"_"+str(jdx)
-                documents.append({"id": doc_id, "content": chunk.page_content})
-        
+                doc_id = f"{ids[idx]}_{jdx}"
+                documents.append({"id": doc_id, "source_id": ids[idx], "content": chunk.page_content})
+            
+            self.handle_graph_conversion(chunks, ids[idx])
+
         self.store_document_in_chromadb(documents)
+
 
 chroma_manager = ChromaManager(collection)
 
@@ -208,26 +256,62 @@ class FileListView(ListAPIView):
 
 class FileUploadView(APIView):
     def post(self, request, is_grantapp, *args, **kwargs):
-        file = request.FILES['file'] 
+        try:
+            file = request.FILES['file'] 
+        except:
+            file = None
+        selectedFileIds = json.loads(request.POST.get('selectedFileIds'))
+        provided_questions = json.loads(request.POST.get('questions'))
+        chat_session_id = int(request.POST.get('chat_session'))
+        chat_session = ChatSession.objects.get(id=chat_session_id)
+        print(provided_questions)
+        if(file is not None):
+            # Save the file using default storage and get the full path
+            file_name = default_storage.save("uploads/" + file.name, ContentFile(file.read()))
+            full_file_path = default_storage.path(file_name)
 
-        # Save the file using default storage and get the full path
-        file_name = default_storage.save("uploads/" + file.name, ContentFile(file.read()))
-        full_file_path = default_storage.path(file_name)
+            # Ensure the file exists
+            if not default_storage.exists(file_name):
+                return Response({"error": "File not saved correctly"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Ensure the file exists
-        if not default_storage.exists(file_name):
-            return Response({"error": "File not saved correctly"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Create an UploadedFile instance with the file path
+            uploaded_file = UploadedFile(filename=file.name, file=file_name)
+            uploaded_file.save()
 
-        # Create an UploadedFile instance with the file path
-        uploaded_file = UploadedFile(filename=file.name, file=file_name)
-        uploaded_file.save()
+            serializer = UploadedFileSerializer(uploaded_file)
 
-        serializer = UploadedFileSerializer(uploaded_file)
+            if is_grantapp:
+                questions = extract_questions(client, full_file_path, provided_questions)
+                draft = draft_from_questions(llm, questions, tools.update(selectedFileIds), chat_session)
+                
+                # Create the PDF
+                buffer = BytesIO()
+                doc = SimpleDocTemplate(buffer, pagesize=letter)
+                styles = getSampleStyleSheet()
+                elements = []
 
-        if is_grantapp:
-            questions = extract_questions(full_file_path)
-            draft = draft_from_questions(llm, questions, tools)
-            
+                for question, answer in draft.items():
+                    elements.append(Paragraph(f"<b>{question}:</b>", styles['Heading2']))
+                    elements.append(Paragraph(answer, styles['BodyText']))
+                    elements.append(Spacer(1, 12))  # Add space between questions
+
+                doc.build(elements)
+
+                buffer.seek(0)
+
+                # Return the PDF in the response
+                response = HttpResponse(buffer, content_type='application/pdf')
+                response['Content-Disposition'] = 'attachment; filename="grant_application.pdf"'
+                uploaded_file.delete()
+                default_storage.delete(full_file_path)
+                return response
+            else:
+                chroma_manager.parse_and_store_files([full_file_path], [uploaded_file.id])
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            questions = extract_questions(client, None, provided_questions)
+            draft = draft_from_questions(llm, questions, tools.update(selectedFileIds), chat_session)
+
             # Create the PDF
             buffer = BytesIO()
             doc = SimpleDocTemplate(buffer, pagesize=letter)
@@ -246,12 +330,7 @@ class FileUploadView(APIView):
             # Return the PDF in the response
             response = HttpResponse(buffer, content_type='application/pdf')
             response['Content-Disposition'] = 'attachment; filename="grant_application.pdf"'
-            uploaded_file.delete()
-            default_storage.delete(full_file_path)
             return response
-        else:
-            chroma_manager.parse_and_store_files([full_file_path], [uploaded_file.id])
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class FileDeleteView(APIView):
     def delete(self, request, pk, *args, **kwargs):
@@ -262,7 +341,7 @@ class FileDeleteView(APIView):
         if os.path.exists(file_path):
             os.remove(file_path)
         try:
-            chroma_manager.delete_from_chromadb([str(pk)])
+            chroma_manager.delete_from_chromadb(pk)
         except:
             pass
 
@@ -295,11 +374,16 @@ class LlmModelView(APIView):
         message = request.data.get("body")
         session_id = request.data.get("session_id")
         chat_session = ChatSession.objects.get(id=session_id)
+        selectedFileIds = json.loads(request.data.get("file_ids"))
+
+        if('clear_neo4j' in message):
+            clear_neo4j(driver)
+            return Response({"response" : "neo4j cleared"})
 
         chat_history = ChatHistory(user="user", message=message, session=chat_session)
         chat_history.save()
 
-        response = respond_to_message(llm, message, tools, chat_session)
+        response = respond_to_message(llm, message, tools.update(selectedFileIds), chat_session)
 
         # Save response in chat history
         chat_history = ChatHistory(user="assistant", message=response, session=chat_session)
