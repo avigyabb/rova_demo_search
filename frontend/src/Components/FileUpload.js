@@ -105,8 +105,10 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
             } else {
                 const result = await response.json();
                 console.log(result);
-                setFiles((prevFiles) => [...prevFiles, result]);
-                setSelectedFileIds(prevIds => [...prevIds, result.id]); // Auto-select new file
+                if(!('error' in result)) {
+                    setFiles((prevFiles) => [...prevFiles, result]);
+                    setSelectedFileIds(prevIds => [...prevIds, result.id]); // Auto-select new file
+                }
             }
             
             } catch (error) {

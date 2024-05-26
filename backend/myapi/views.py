@@ -259,53 +259,60 @@ class FileUploadView(APIView):
         except:
             file = None
         selectedFileIds = json.loads(request.POST.get('selectedFileIds'))
+        selectedFileIds = [i for i in selectedFileIds if i is not None]
         provided_questions = json.loads(request.POST.get('questions'))
         chat_session_id = int(request.POST.get('chat_session'))
         chat_session = ChatSession.objects.get(id=chat_session_id)
         print(provided_questions)
         if(file is not None):
-            # Save the file using default storage and get the full path
-            file_name = default_storage.save("uploads/" + file.name, ContentFile(file.read()))
-            full_file_path = default_storage.path(file_name)
+            print(default_storage.exists("uploads/"+file.name))
+            # Check if the file already exists
+            if(not default_storage.exists("uploads/"+file.name) or is_grantapp):
+                # Save the file using default storage and get the full path
+                file_name = default_storage.save("uploads/" + file.name, ContentFile(file.read()))
+                full_file_path = default_storage.path(file_name)
 
-            # Ensure the file exists
-            if not default_storage.exists(file_name):
-                return Response({"error": "File not saved correctly"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                # Ensure the file exists
+                if not default_storage.exists(file_name):
+                    return Response({"error": "File not saved correctly"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            # Create an UploadedFile instance with the file path
-            uploaded_file = UploadedFile(filename=file.name, file=file_name)
-            uploaded_file.save()
+                # Create an UploadedFile instance with the file path
+                uploaded_file = UploadedFile(filename=file.name, file=file_name)
+                uploaded_file.save()
 
-            serializer = UploadedFileSerializer(uploaded_file)
+                serializer = UploadedFileSerializer(uploaded_file)
 
-            if is_grantapp:
-                questions = extract_questions(client, full_file_path, provided_questions)
-                draft = draft_from_questions(llm, questions, tools.update(selectedFileIds), chat_session)
-                
-                # Create the PDF
-                buffer = BytesIO()
-                doc = SimpleDocTemplate(buffer, pagesize=letter)
-                styles = getSampleStyleSheet()
-                elements = []
+                if is_grantapp:
+                    questions = extract_questions(client, full_file_path, provided_questions)
+                    draft = draft_from_questions(llm, questions, tools.update(selectedFileIds), chat_session)
+                    
+                    # Create the PDF
+                    buffer = BytesIO()
+                    doc = SimpleDocTemplate(buffer, pagesize=letter)
+                    styles = getSampleStyleSheet()
+                    elements = []
 
-                for question, answer in draft.items():
-                    elements.append(Paragraph(f"<b>{question}:</b>", styles['Heading2']))
-                    elements.append(Paragraph(answer, styles['BodyText']))
-                    elements.append(Spacer(1, 12))  # Add space between questions
+                    for question, answer in draft.items():
+                        elements.append(Paragraph(f"<b>{question}:</b>", styles['Heading2']))
+                        elements.append(Paragraph(answer, styles['BodyText']))
+                        elements.append(Spacer(1, 12))  # Add space between questions
 
-                doc.build(elements)
+                    doc.build(elements)
 
-                buffer.seek(0)
+                    buffer.seek(0)
 
-                # Return the PDF in the response
-                response = HttpResponse(buffer, content_type='application/pdf')
-                response['Content-Disposition'] = 'attachment; filename="grant_application.pdf"'
-                uploaded_file.delete()
-                default_storage.delete(full_file_path)
-                return response
+                    # Return the PDF in the response
+                    response = HttpResponse(buffer, content_type='application/pdf')
+                    response['Content-Disposition'] = 'attachment; filename="grant_application.pdf"'
+                    uploaded_file.delete()
+                    default_storage.delete(full_file_path)
+                    return response
+                else:
+                    chroma_manager.parse_and_store_files([full_file_path], [uploaded_file.id])
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
-                chroma_manager.parse_and_store_files([full_file_path], [uploaded_file.id])
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                print("File already exists, ignoring...")
+                return Response({"error": "File already exists"}, status=status.HTTP_200_OK)
         else:
             questions = extract_questions(client, None, provided_questions)
             draft = draft_from_questions(llm, questions, tools.update(selectedFileIds), chat_session)
