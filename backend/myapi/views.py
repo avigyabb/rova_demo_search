@@ -48,7 +48,6 @@ llm_transformer_filtered = LLMGraphTransformer(
     llm=llm,
     allowed_nodes=NODES,
     allowed_relationships=RELATIONSHIPS,
-    node_properties=PROPS,
     strict_mode=True
 )
 graph = Neo4jGraph()
@@ -397,13 +396,29 @@ class LlmModelView(APIView):
         return Response({"response" : response})
 
 class ChatSessionView(ListAPIView):
-    queryset = ChatSession.objects.all()
     serializer_class = ChatSessionSerializer
+
+    def get_queryset(self):
+        queryset = ChatSession.objects.all()
+        if not queryset.exists():
+            # Create a chat session using the ChatSessionCreateView
+            session = ChatSession(name=f"Chat #{ChatSessionCreateView.next_id}")
+            ChatSessionCreateView.next_id += 1
+            session.save()
+            # Refresh the queryset
+            queryset = ChatSession.objects.all()
+        return queryset
 
 # add new Chat Session
 class ChatSessionCreateView(APIView):
+    next_id = 1
+
     def post(self, request, *args, **kwargs):
         name = request.data.get("body")
+        # Create new chat session and get the id and then name is Chat #id
         session = ChatSession(name=name)
+        if name == "":
+            session.name = f"Chat #{ChatSessionCreateView.next_id}"
+            ChatSessionCreateView.next_id += 1
         session.save()
         return Response(status=status.HTTP_201_CREATED)

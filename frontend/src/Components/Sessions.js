@@ -9,24 +9,23 @@ import { REACT_APP_API_URL } from "../consts";
 const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [value, setValue] = useState(0); // State to track the current tab
 
   const handleChange = (event, newValue) => {
-    setValue(newValue);
     const session = sessions[newValue];
     setSelectedSession(session);
     fetchChat(session.id);
   };
 
-  const fetchSessions = async () => {
+  const fetchSessions = async (selectIndex = -1) => {
     try {
       const response = await fetch(REACT_APP_API_URL + 'chat-sessions/');
       const result = await response.json();
-      setSessions(result.map((session, index) => ({ ...session, name: `Chat#${index + 1}` })));
+      setSessions(result.map((session, index) => ({ ...session, name: session.name })));
+      
       if (result.length > 0) {
-        const latestSession = result[0];
-        setSelectedSession(latestSession);
-        fetchChat(); // Fetch chat history for the latest session
+        const sessionToSelect = selectIndex >= 0 && selectIndex < result.length ? result[selectIndex] : result[result.length - 1];
+        setSelectedSession(sessionToSelect);
+        fetchChat(sessionToSelect.id); // Fetch chat history for the selected session
       }
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -38,10 +37,10 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   const handleNewChat = async () => {
     try {
       const response = await axios.post(REACT_APP_API_URL + "create-chat-session/", {
-        body: 'New Chat',
+        body: '',
       });
       if (response.status === 201) {
-        await fetchSessions();
+        await fetchSessions(); // Refresh sessions after creating a new one
       }
     } catch (error) {
       console.error(error);
@@ -49,11 +48,30 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   };
 
   const handleDeleteSession = async (sessionId, event) => {
-    event.stopPropagation(); // Prevent tab switch when clicking delete
     try {
+      const sessionIndex = sessions.findIndex(session => session.id === sessionId);
+      const curIndex = sessions.findIndex(session => session.id === selectedSession?.id);
+
       const response = await axios.delete(REACT_APP_API_URL + `delete-chat-session/${sessionId}/`);
       if (response.status === 204) {
-        await fetchSessions();
+        // Session selection logic
+        let newSelectIndex = -1;
+        if (curIndex === sessionIndex) {
+          if (sessions.length === 1) {
+            newSelectIndex = -1;
+          } else if (sessionIndex === sessions.length - 1) {
+            newSelectIndex = sessionIndex - 1;
+          } else {
+            newSelectIndex = sessionIndex;
+          }
+        } else {
+            if (curIndex > sessionIndex) {
+              newSelectIndex = curIndex - 1;
+            } else {
+              newSelectIndex = curIndex;
+            }
+        }
+        await fetchSessions(newSelectIndex); // Refresh sessions after deleting one
       }
     } catch (error) {
       console.error('Error deleting session:', error);
@@ -61,7 +79,7 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   };
 
   useEffect(() => {
-    fetchSessions();
+    fetchSessions(0);
   }, []);
 
   return (
@@ -70,7 +88,13 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
         <CircularProgress />
       ) : (
         <>
-          <Tabs value={value} onChange={handleChange} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile>
+          <Tabs
+            value={sessions.findIndex(session => session.id === selectedSession?.id)}
+            onChange={handleChange}
+            variant="scrollable"
+            scrollButtons="auto"
+            allowScrollButtonsMobile
+          >
             {sessions.map((session, index) => (
               <Tab
                 key={session.id}
