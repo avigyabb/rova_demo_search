@@ -3,9 +3,8 @@ import axios from 'axios';
 import "../Styles/Chat.css";
 import { REACT_APP_API_URL } from "../consts";
 
-export default function Chat({ selectedSession, selectedFileIds, setSelectedFileIds}) {
+export default function Chat({ selectedSession, selectedFileIds, setSelectedFileIds, setDocuments, chatLog, setChatLog}) {
   const [inputValue, setInputValue] = useState("");
-  const [chatLog, setChatLog] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [inputRows, setInputRows] = useState(1);
   const [inputAreaWidth, setInputAreaWidth] = useState(0);
@@ -93,7 +92,15 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
         resizeObserver.disconnect();
       }
     };
-  }, []);
+    }, []);
+
+      useEffect (() => {
+        const chatWindowDiv = document.getElementById("chatWindowDiv")
+        if (chatWindowDiv) {
+            const height = chatWindowDiv.scrollHeight
+            chatWindowDiv.scrollTop = height
+        }
+      }, [chatLog])
 
   useEffect(() => {
     const numPixels = 9 * inputValue.length;
@@ -111,12 +118,18 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
 
   const handleTyping = (event) => {
     setInputValue(event.target.value);
-  };
+  };    
+  
+  const showDocuments = (index) => {
+    //setDocuments(chatLog[index].documents)
+    setDocuments([{title : "Document 1 title", content : "Document 1 content"}, {title : "Document 2 title", content : "Document 2 content"}])
+    }
 
   return (
-    <div className="container mx-auto">
-      <div className="flex flex-col h-screen bg-gray-900" style={{ maxHeight: "100vh", backgroundColor: "#e9e9e9" }}>
-        <div id="chatWindowDiv" className="flex-grow p-6" style={{ overflowY: "auto" }}>
+    <div className = "container mx-auto">
+      <div className="flex flex-col bg-gray-900" style={{backgroundColor: "#e9e9e9", height : "90vh"}}>
+        
+        <div id="chatWindowDiv" className="flex-grow p-6" style={{ overflowY: "auto"}}>
           <div className="flex flex-col space-y-4">
             {chatLog.map((message, index) => (
               <div
@@ -124,28 +137,39 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                 className={`flex flex-col justify-start`}
                 style={{ fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word' }}
               >
-                <div className={`chat-role ${message.user === "user" ? 'blue' : 'gray'} rounded-lg p-2`}>
-                  {message.user}
+                <div className = "flex items-center">
+                    <div className = {`${message.user === "user" ? "blue" : "gray"} w-8 h-8 rounded-full`}>
+                    </div>
+                    <div className={`chat-role font-bold ${message.user === "user" ? 'none' : 'none'} rounded-lg p-2`}>
+                        {message.user}
+                    </div>
+                    {message.user === "assistant" &&
+                    <button className = {"show-documents gray rounded-lg p-2 ml-auto"} onClick = {() => showDocuments(index)}> show sources </button>
+                    }
                 </div>
-                <div className={`rounded-lg p-2 text-left`} style={{ alignContent: 'left' }}>
-                  <div dangerouslySetInnerHTML={{ __html: formatGPTMessage(message.message) }} />
+                <div className = {`rounded-lg p-2 text-left`} style={{alignContent : 'left'}}>
+                    <div dangerouslySetInnerHTML={{ __html: formatGPTMessage(message.message) }} />
                 </div>
-              </div>
+            </div>
             ))}
-            {isLoading && (
-              <div
-                key={chatLog.length}
-                className={"flex flex-col justify-start"}
-                style={{ fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word' }}
-              >
-                <div className={`chat-role gray rounded-lg p-2`}>assistant</div>
-                <div className="rounded-lg p-2 text-left" style={{ alignContent: "left" }}>
-                  ...
+            {
+                isLoading &&
+                <div 
+                    key = {chatLog.length} 
+                    className = {"flex flex-col justify-start"}
+                    style = {{fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word'}}
+                >
+                    <div className = {`chat-role gray rounded-lg p-2`}>
+                        assistant
+                    </div>
+                    <div className = "rounded-lg p-2 text-left" style = {{alignContent: "left"}}>
+                        ...
+                    </div>
                 </div>
-              </div>
-            )}
-          </div>
+            }
+            </div>
         </div>
+
         <form onSubmit={handleSubmit} className="flex-none p-6">
           <div style={{ position: "relative" }}>
             <div className="flex rounded-lg border border-white-700 bg-white-800">
@@ -173,6 +197,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
             </div>
           </div>
         </form>
+
       </div>
     </div>
   );

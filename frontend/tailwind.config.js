@@ -2,6 +2,7 @@
 module.exports = {
   content: [
     "./src/Components/Chat.js",
+    "./src/Components/Sources.js",
   ],
   theme: {
     extend: {},
