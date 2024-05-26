@@ -94,6 +94,6 @@ def extract_questions(client, file_path, provided_questions):
     response_format={"type": "json_object"}
     )
     questions = json.loads(completion.choices[0].message.content)
-    questions['questions'] = [{"description":q, "word_limit":None, "page_limit":None} for q in provided_questions[1:]] + questions['questions']
+    questions['questions'] = [{"description":q, "word_limit":None, "page_limit":None} for q in provided_questions if len(q) > 5] + questions['questions'] # just to make sure lone characters don't sneak in there
     print("QUESTIONS: ", questions)
     return questions
