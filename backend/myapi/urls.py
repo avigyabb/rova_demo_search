@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import FileUploadView, FileDeleteView, FileListView, LlmModelView, ChatHistoryView, ChatSessionView, ChatSessionCreateView, ChatSessionDeleteView
+from .views import FileUploadView, FileDeleteView, FileListView, LlmModelView, ChatHistoryView, ChatSessionView, ChatSessionCreateView, ChatSessionDeleteView, ChatSessionRenameView
 
 urlpatterns = [
     path('upload/<int:is_grantapp>/', FileUploadView.as_view(), name='file-upload'),
@@ -10,4 +10,5 @@ urlpatterns = [
     path('chat-sessions/', ChatSessionView.as_view(), name = "chat-sessions"),
     path('create-chat-session/', ChatSessionCreateView.as_view(), name = "create-chat-session"),
     path('delete-chat-session/<int:pk>/', ChatSessionDeleteView.as_view(), name = "delete-chat-session"),
+    path('rename-chat-session/<int:pk>/', ChatSessionRenameView.as_view(), name = "rename-chat-session"),
 ]

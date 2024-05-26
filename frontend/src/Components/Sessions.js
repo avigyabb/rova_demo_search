@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Tabs, Tab, Box, IconButton, CircularProgress, Typography } from '@mui/material';
+import { Tabs, Tab, Box, IconButton, CircularProgress, Typography, TextField } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close'; // Import close icon for deletion
+import CloseIcon from '@mui/icons-material/Close';
 import "../Styles/FileUpload.css";
 import { REACT_APP_API_URL } from "../consts";
 
 const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [renamingSessionId, setRenamingSessionId] = useState(null);
+  const [newSessionName, setNewSessionName] = useState('');
 
   const handleChange = (event, newValue) => {
     const session = sessions[newValue];
@@ -78,6 +80,34 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
     }
   };
 
+  const handleRenameSession = async (sessionId, newName) => {
+    try {
+      const response = await axios.post(REACT_APP_API_URL + `rename-chat-session/${sessionId}/`, {
+        name: newName,
+      });
+      if (response.status === 204) { // Note that Response(status=status.HTTP_204_NO_CONTENT) returns 204 status
+        await fetchSessions(sessions.findIndex(session => session.id === selectedSession?.id));
+      }
+    } catch (error) {
+      console.error('Error renaming session:', error);
+    }
+  };  
+
+  const toggleRenameMode = (sessionId) => {
+    setRenamingSessionId(sessionId);
+    const session = sessions.find(s => s.id === sessionId);
+    setNewSessionName(session.name);
+  };
+
+  const handleRenameChange = (event) => {
+    setNewSessionName(event.target.value);
+  };
+
+  const handleRenameSubmit = (sessionId) => {
+    handleRenameSession(sessionId, newSessionName);
+    setRenamingSessionId(null);
+  };
+
   useEffect(() => {
     fetchSessions(0);
   }, []);
@@ -100,9 +130,29 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
                 key={session.id}
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Typography variant="body2" sx={{ flexGrow: 1 }}>
-                      {session.name}
-                    </Typography>
+                    {renamingSessionId === session.id ? (
+                      <TextField
+                        value={newSessionName}
+                        onChange={handleRenameChange}
+                        onBlur={() => handleRenameSubmit(session.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleRenameSubmit(session.id);
+                          }
+                        }}
+                        size="small"
+                        autoFocus
+                        sx={{ flexGrow: 1 }}
+                      />
+                    ) : (
+                      <Typography
+                        variant="body2"
+                        sx={{ flexGrow: 1 }}
+                        onDoubleClick={() => toggleRenameMode(session.id)}
+                      >
+                        {session.name}
+                      </Typography>
+                    )}
                     <IconButton
                       onClick={(event) => handleDeleteSession(session.id, event)}
                       size="small"

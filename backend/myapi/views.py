@@ -422,3 +422,11 @@ class ChatSessionCreateView(APIView):
             ChatSessionCreateView.next_id += 1
         session.save()
         return Response(status=status.HTTP_201_CREATED)
+    
+# rename Chat session
+class ChatSessionRenameView(APIView):
+    def post(self, request, pk, *args, **kwargs):
+        session = get_object_or_404(ChatSession, pk=pk)
+        session.name = request.data.get("name")
+        session.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
