@@ -9,12 +9,12 @@ import ArrowButton from './ArrowButton.js';
 import "../Styles/Home.css";
 
 function Home() {
-  const [selectedSession, setSelectedSession] = useState(localStorage.getItem('selectedSession') ? JSON.parse(localStorage.getItem('selectedSession')) : null);
-  const [selectedFileIds, setSelectedFileIds] = useState(localStorage.getItem('selectedFileIds') ? JSON.parse(localStorage.getItem('selectedFileIds')) : []);
+  const [selectedSession, setSelectedSession] = useState(sessionStorage.getItem('selectedSession') ? JSON.parse(sessionStorage.getItem('selectedSession')) : null);
+  const [selectedFileIds, setSelectedFileIds] = useState(sessionStorage.getItem('selectedFileIds') ? JSON.parse(sessionStorage.getItem('selectedFileIds')) : []);
   const chatRef = useRef(null);
   const [documents, setDocuments] = useState(null)
   const [chatLog, setChatLog] = useState([])
-  const [isSidebarOpen, setSidebarOpen] = useState(localStorage.getItem('isSidebarOpen') ? JSON.parse(localStorage.getItem('isSidebarOpen')) : true);
+  const [isSidebarOpen, setSidebarOpen] = useState(sessionStorage.getItem('isSidebarOpen') ? JSON.parse(sessionStorage.getItem('isSidebarOpen')) : true);
 
   useEffect(() => {
     // Automatically start session recording when the component mounts
@@ -28,20 +28,20 @@ function Home() {
   };
 
   useEffect(() => {
-    // Save to localStorage when selectedFileIds changes
-    localStorage.setItem('selectedFileIds', JSON.stringify(selectedFileIds));
+    // Save to sessionStorage when selectedFileIds changes
+    sessionStorage.setItem('selectedFileIds', JSON.stringify(selectedFileIds));
   }, [selectedFileIds]);
 
   useEffect(() => {
-    // Save to localStorage when selectedFileIds changes
-    localStorage.setItem('selectedSession', JSON.stringify(selectedSession));
-    console.log(localStorage);
+    // Save to sessionStorage when selectedFileIds changes
+    sessionStorage.setItem('selectedSession', JSON.stringify(selectedSession));
+    console.log(sessionStorage);
     console.log(selectedSession)
   }, [selectedSession]);
 
   useEffect(() => {
-    // Save to localStorage when selectedFileIds changes
-    localStorage.setItem('isSidebarOpen', JSON.stringify(isSidebarOpen));
+    // Save to sessionStorage when selectedFileIds changes
+    sessionStorage.setItem('isSidebarOpen', JSON.stringify(isSidebarOpen));
   }, [isSidebarOpen]);
 
   return (
