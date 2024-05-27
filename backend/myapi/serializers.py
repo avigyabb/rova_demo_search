@@ -9,7 +9,7 @@ class UploadedFileSerializer(serializers.ModelSerializer):
 class ChatHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatHistory
-        fields = ['user', 'message']
+        fields = ['user', 'message', "documents"]
 
 class ChatSessionSerializer(serializers.ModelSerializer):
     class Meta:

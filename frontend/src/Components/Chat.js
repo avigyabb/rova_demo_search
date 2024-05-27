@@ -31,6 +31,14 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   }, [selectedSession]);
 
   useEffect(() => {
+    if (chatLog.length > 0) {
+        if (chatLog[chatLog.length - 1].user == "assistant") {
+            setDocuments(chatLog[chatLog.length - 1].documents)
+        }
+    } else {
+        setDocuments(null)
+    }
+
     const chatWindowDiv = document.getElementById("chatWindowDiv");
     if (chatWindowDiv) {
       const height = chatWindowDiv.scrollHeight;
@@ -49,11 +57,9 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
           body: inputValue,
           session_id: selectedSession.id,
           file_ids: JSON.stringify(selectedFileIds)
-          
         });
-        setIsLoading(false);
-        setChatLog(chatLog.slice(0, -1));
-        fetchChat(selectedSession.id);
+        fetchChat(selectedSession.id)
+        setIsLoading(false)
       } catch (error) {
         console.error(error);
         setIsLoading(false);
@@ -94,14 +100,6 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
     };
     }, []);
 
-      useEffect (() => {
-        const chatWindowDiv = document.getElementById("chatWindowDiv")
-        if (chatWindowDiv) {
-            const height = chatWindowDiv.scrollHeight
-            chatWindowDiv.scrollTop = height
-        }
-      }, [chatLog])
-
   useEffect(() => {
     const numPixels = 9 * inputValue.length;
     const newNumRows = Math.ceil(numPixels / inputAreaWidth);
@@ -121,8 +119,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   };    
   
   const showDocuments = (index) => {
-    //setDocuments(chatLog[index].documents)
-    setDocuments([{title : "Document 1 title", content : "Document 1 content"}, {title : "Document 2 title", content : "Document 2 content"}])
+    setDocuments(chatLog[index].documents)
     }
 
   return (

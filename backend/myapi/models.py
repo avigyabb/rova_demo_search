@@ -20,6 +20,7 @@ class ChatSession(models.Model):
 class ChatHistory(models.Model):
     user = models.CharField(max_length=255)
     message = models.TextField()
+    documents = models.JSONField(default = list)
     session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='chats')
 
     def __str__(self):

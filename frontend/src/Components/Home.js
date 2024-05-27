@@ -12,7 +12,7 @@ function Home() {
   const [selectedSession, setSelectedSession] = useState(localStorage.getItem('selectedSession') ? JSON.parse(localStorage.getItem('selectedSession')) : null);
   const [selectedFileIds, setSelectedFileIds] = useState(localStorage.getItem('selectedFileIds') ? JSON.parse(localStorage.getItem('selectedFileIds')) : []);
   const chatRef = useRef(null);
-  const [documents, setDocuments] = useState([])
+  const [documents, setDocuments] = useState(null)
   const [chatLog, setChatLog] = useState([])
   const [isSidebarOpen, setSidebarOpen] = useState(localStorage.getItem('isSidebarOpen') ? JSON.parse(localStorage.getItem('isSidebarOpen')) : true);
 
@@ -59,7 +59,7 @@ function Home() {
         <div style={{flexGrow : 1, overflowX : "auto", backgroundColor: "rgba(233,233,233,255)"}}>
           <Chat ref={chatRef} selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} setDocuments = {setDocuments} chatLog = {chatLog} setChatLog = {setChatLog} />
         </div>
-        {chatLog.length > 0 && (
+        {documents && (
         <div style = {{width : "300px", display : "flex"}}>
           <Sources documents = {documents}/>
         </div>)}

@@ -62,6 +62,8 @@ try:
 except:
     collection = chroma_client.create_collection(name="grant_docs")
 
+retrieved_documents = []
+
 class ChromaRetriever(BaseRetriever):
     """List of documents to retrieve from."""
     k: int
@@ -78,6 +80,12 @@ class ChromaRetriever(BaseRetriever):
         else:
             results = []#collection.query(query_embedding, n_results=self.k)
         if(len(results) > 0):
+            for index in range(len(results["documents"][0])):
+                document_content = results["documents"][0][index]
+                document_id = results["metadatas"][0][index]["source_id"]
+                document = UploadedFile.objects.get(pk = document_id)
+                global retrieved_documents
+                retrieved_documents.append({"name" : document.filename, "content" : document_content})
             return [Document(page_content=chunk) for chunk in results['documents'][0]] # add meta_data here?
         else:
             return []
@@ -244,7 +252,6 @@ class ChromaManager():
 
         self.store_document_in_chromadb(documents)
 
-
 chroma_manager = ChromaManager(collection)
 
 class FileListView(ListAPIView):
@@ -368,6 +375,7 @@ class ChatHistoryView(APIView):
             chat_session = ChatSession.objects.get(id=session_id)
             chat_history = ChatHistory.objects.filter(session=chat_session)
             serializer = ChatHistorySerializer(chat_history, many=True)
+            print("serializer data", serializer.data)
             return Response(serializer.data)
         except ChatSession.DoesNotExist:
             return Response({"error": "Chat session not found"}, status=404)
@@ -392,8 +400,12 @@ class LlmModelView(APIView):
         response = respond_to_message(llm, message, tools.update(selectedFileIds), chat_session)
 
         # Save response in chat history
-        chat_history = ChatHistory(user="assistant", message=response, session=chat_session)
+        global retrieved_documents
+        chat_history = ChatHistory(user="assistant", message=response, documents = retrieved_documents, session=chat_session)
         chat_history.save()
+
+        retrieved_documents = []
+
         return Response({"response" : response})
 
 class ChatSessionView(ListAPIView):
