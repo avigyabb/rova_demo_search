@@ -17,7 +17,7 @@ const ArrowButton = ({ onClick, isSidebarOpen}) => {
 
   // Apply dynamic styling to the outermost div based on isOpen
   const containerStyle = {
-      width: isOpen ? '0px' : '50px',
+      width: isOpen ? '0px' : '2%',
       backgroundColor: isOpen ? 'rgba(240, 240, 240, 1)' : 'rgba(233,233,233,255)',
   };
 
