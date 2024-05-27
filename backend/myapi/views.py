@@ -380,6 +380,7 @@ class LlmModelView(APIView):
         session_id = request.data.get("session_id")
         chat_session = ChatSession.objects.get(id=session_id)
         selectedFileIds = json.loads(request.data.get("file_ids"))
+        selectedFileIds = [i for i in selectedFileIds if i is not None]
 
         if('clear_neo4j' in message):
             clear_neo4j(driver)

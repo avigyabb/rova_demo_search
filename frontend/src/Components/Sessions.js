@@ -33,6 +33,13 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
       console.error('Error fetching sessions:', error);
     } finally {
       setLoading(false);
+      const currentSession = localStorage.getItem('selectedSession'); // this code pulls current session from local storage
+      if (currentSession) {
+        console.log("Current session found:", currentSession);
+        setSelectedSession(JSON.parse(currentSession));
+      } else {
+        console.log("No current session found!");
+      }
     }
   };
 
