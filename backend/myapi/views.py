@@ -375,7 +375,6 @@ class ChatHistoryView(APIView):
             chat_session = ChatSession.objects.get(id=session_id)
             chat_history = ChatHistory.objects.filter(session=chat_session)
             serializer = ChatHistorySerializer(chat_history, many=True)
-            print("serializer data", serializer.data)
             return Response(serializer.data)
         except ChatSession.DoesNotExist:
             return Response({"error": "Chat session not found"}, status=404)
