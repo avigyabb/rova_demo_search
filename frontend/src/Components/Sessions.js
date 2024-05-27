@@ -33,13 +33,6 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
       console.error('Error fetching sessions:', error);
     } finally {
       setLoading(false);
-      const currentSession = localStorage.getItem('selectedSession'); // this code pulls current session from local storage
-      if (currentSession) {
-        console.log("Current session found:", currentSession);
-        setSelectedSession(JSON.parse(currentSession));
-      } else {
-        console.log("No current session found!");
-      }
     }
   };
 
@@ -50,6 +43,8 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
       });
       if (response.status === 201) {
         await fetchSessions(); // Refresh sessions after creating a new one
+        console.log(sessions)
+        // setSelectedSession(JSON.parse(currentSession));
       }
     } catch (error) {
       console.error(error);
@@ -116,7 +111,21 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   };
 
   useEffect(() => {
-    fetchSessions(0);
+    (async() => {
+      try{
+        await fetchSessions(0);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        const currentSession = localStorage.getItem('selectedSession'); // this code pulls current session from local storage
+        if (currentSession) {
+          console.log("Current session found:", currentSession);
+          setSelectedSession(JSON.parse(currentSession));
+        } else {
+          console.log("No current session found!");
+        }
+      }
+    })()
   }, []);
 
   return (

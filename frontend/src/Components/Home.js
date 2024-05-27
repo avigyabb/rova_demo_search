@@ -56,7 +56,7 @@ function Home() {
           <FileUploadComponent selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} />
         </div>
         }
-        <div style={{flexGrow : 1, overflowX : "auto" }}>
+        <div style={{flexGrow : 1, overflowX : "auto", backgroundColor: "rgba(233,233,233,255)"}}>
           <Chat ref={chatRef} selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} setDocuments = {setDocuments} chatLog = {chatLog} setChatLog = {setChatLog} />
         </div>
         {chatLog.length > 0 && (

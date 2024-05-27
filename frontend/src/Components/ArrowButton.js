@@ -15,8 +15,14 @@ const ArrowButton = ({ onClick, isSidebarOpen}) => {
   // Set the class for the arrow direction based on the isOpen state
   const arrowClass = isOpen ? 'arrow left' : 'arrow right';
 
+  // Apply dynamic styling to the outermost div based on isOpen
+  const containerStyle = {
+      width: isOpen ? '0px' : '50px',
+      backgroundColor: isOpen ? 'rgba(240, 240, 240, 1)' : 'rgba(233,233,233,255)',
+  };
+
   return (
-    <div className='arrow-button-container'>
+    <div style={containerStyle}>
         <button className="arrow-button" onClick={toggleOpen}>
         <div className={arrowClass}></div>
         </button>
