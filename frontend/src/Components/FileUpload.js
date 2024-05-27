@@ -20,7 +20,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         const response = await fetch(REACT_APP_API_URL + 'files/');
         const result = await response.json();
         setFiles(result);
-        setSelectedFileIds(JSON.parse(localStorage.getItem('selectedFileIds')));
+        setSelectedFileIds(JSON.parse(sessionStorage.getItem('selectedFileIds')));
       } catch (error) {
         console.error('Error fetching files:', error);
       }
