@@ -111,21 +111,7 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   };
 
   useEffect(() => {
-    (async() => {
-      try{
-        await fetchSessions(0);
-      } catch (error) {
-        console.log(error);
-      } finally {
-        const currentSession = sessionStorage.getItem('selectedSession'); // this code pulls current session from local storage
-        if (currentSession) {
-          console.log("Current session found:", currentSession);
-          setSelectedSession(JSON.parse(currentSession));
-        } else {
-          console.log("No current session found!");
-        }
-      }
-    })()
+    fetchSessions(0);
   }, []);
 
   return (

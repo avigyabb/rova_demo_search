@@ -13,3 +13,12 @@
 .show-documents {
     max-width : fit-content;
 }
+
+
+.show-documents {
+    background-color: lightgray;
+}
+
+.show-documents.hide-sources {
+    background-color: darkgray;
+}
