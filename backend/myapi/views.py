@@ -271,25 +271,17 @@ class FileListView(ListAPIView):
 class FileUploadView(APIView):
     def post(self, request, is_grantapp, *args, **kwargs):
         file_organization = 'reference'
-        print("request")
-        print(request.POST)
         try:
-            print("try")
             file = request.FILES['file']
-            print(file)
             file_organization = request.POST.get('file_organization') 
-            print(file_organization)
         except:
-            print("except")
             file = None
         selectedFileIds = json.loads(request.POST.get('selectedFileIds'))
         selectedFileIds = [i for i in selectedFileIds if i is not None]
         provided_questions = json.loads(request.POST.get('questions'))
         chat_session_id = int(request.POST.get('chat_session'))
         chat_session = ChatSession.objects.get(id=chat_session_id)
-        print("file: ", file)
         if(file is not None):
-            print(default_storage.exists("uploads/"+file.name))
             # Check if the file already exists
             if(True):
             # if(not default_storage.exists("uploads/"+file.name) or is_grantapp):
@@ -302,8 +294,6 @@ class FileUploadView(APIView):
                     return Response({"error": "File not saved correctly"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
                 # Create an UploadedFile instance with the file path
-                print("loc6")
-                print(file_organization)
                 uploaded_file = UploadedFile(filename=file.name, file=file_name, file_organization=file_organization or 'reference')
                 uploaded_file.save()
 
@@ -380,6 +370,16 @@ class FileDeleteView(APIView):
 
         file.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class FileEditView(APIView):
+    def post(self, request, pk, *args, **kwargs):
+        file = get_object_or_404(UploadedFile, pk=pk)
+        new_file_organization = request.POST.get('file_organization')
+        file.file_organization = new_file_organization
+        file.save()
+        serializer = UploadedFileSerializer(file)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 # delete a chat session
 class ChatSessionDeleteView(APIView):

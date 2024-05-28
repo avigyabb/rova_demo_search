@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { FaTrash } from 'react-icons/fa';
+import { FaTrash, FaTags, FaPlus } from 'react-icons/fa';
 import "../Styles/FileUpload.css"
 import { REACT_APP_API_URL } from "../consts";
 import CircularProgress from '@mui/material/CircularProgress';// Assuming you have Material-UI installed
 import Form from './Form.js';
 
+const organizationColors = {
+  'reference': 'black',
+  'grantor': 'green',
+  'grantee': 'blue',
+};
+
 const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFileIds }) => {
-  console.log(selectedSession)
   const [files, setFiles] = useState([]);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -14,25 +19,24 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
   const [showOverlay, setShowOverlay] = useState(false);
   const [inputs, setInputs] = useState(['']);
   const referenceFiles = files.filter(file => file.file_organization === 'reference');
-  console.log(referenceFiles)
   const grantorFiles = files.filter(file => file.file_organization === 'grantor');
   const granteeFiles = files.filter(file => file.file_organization === 'grantee');
+  const [focusedFile, setFocusedFile] = useState(null);
+  const [focusedFileOrganization, setFocusedFileOrganization] = useState(null);
 
-
+  const fetchFiles = async () => {
+    try {
+      const response = await fetch(REACT_APP_API_URL + 'files/');
+      const result = await response.json();
+      console.log(result)
+      setFiles(result);
+      setSelectedFileIds(JSON.parse(sessionStorage.getItem('selectedFileIds')));
+    } catch (error) {
+      console.error('Error fetching files:', error);
+    }
+  };
 
   useEffect(() => {
-    const fetchFiles = async () => {
-      try {
-        const response = await fetch(REACT_APP_API_URL + 'files/');
-        const result = await response.json();
-        console.log(result)
-        setFiles(result);
-        setSelectedFileIds(JSON.parse(sessionStorage.getItem('selectedFileIds')));
-      } catch (error) {
-        console.error('Error fetching files:', error);
-      }
-    };
-
     fetchFiles();
   }, []);
 
@@ -138,100 +142,109 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
   const submitForm = () => {
     handleUpload(null, 1, 'template');
   };
+
+  const handleTagChange = async (fileId, newOrg) => {
+    const formData = new FormData();
+    formData.append('file_organization', newOrg);
+        
+    try {
+      const response = await fetch(REACT_APP_API_URL + `edit/${fileId}/`, {
+        method: 'POST',
+        body: formData,
+      });
+      console.log(response)
+      if (response.status === 204) {
+        fetchFiles();
+      } else {
+        console.error('Error editing file');
+      }
+    } catch (error) {
+      console.error('Error editing file:', error);
+    } finally {
+      setFocusedFileOrganization(null);
+    }
+  }
   
   return (
       <div style={{ 
         width: '300px', 
         backgroundColor: '#f0f0f0', 
-        padding: '20px', 
+        padding: '15px', 
         borderRight: '1px solid black', 
         overflowY: 'auto' 
       }}>
-        <label style={{margin: '20px'}} className="custom-file-input">
-        Upload Research
-        <input
-          type="file"
-          multiple
-          onChange={(event) => handleUpload(event, 0, 'reference')}
-          style={{ display: 'none' }}
-        />
-        </label>
-
-        <div style={{ marginTop: '20px' }}>
-          <h1 style={{ fontWeight: 'bold' }}>Uploaded Files</h1>
-          {referenceFiles.length === 0 ? (
+        <div style={{ marginTop: '40px' }}>
+          <label className="add-file-btn">
+            <FaPlus style={{ marginRight: '8px' }}/>
+            Upload Files
+            <input
+              type="file"
+              multiple
+              onChange={(event) => handleUpload(event, 0, 'reference')}
+              style={{ display: 'none' }}
+            />
+          </label>
+          {files.length === 0 ? (
             <p>No files uploaded yet.</p>
           ) : (
             <ul style={{ paddingLeft: '0px', marginTop: '10px' }}>
-              {referenceFiles.map((file) => (
-                <li key={file.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedFileIds.includes(file.id)}
-                    onChange={() => toggleFileSelection(file.id)}
-                    style={{ marginRight: '10px' }}
-                  />
-                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.filename}</span>
-                  <FaTrash 
-                    style={{ cursor: 'pointer', color: 'red', flexShrink: 0 }} 
-                    onClick={() => handleDelete(file.id)} 
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-          
-          <div style={{ display: 'flex', flexDirection: 'row', marginTop: '20px' }}>
-            <h1 style={{ fontWeight: 'bold' }}>Grantee Files</h1>
-            <label style={{}} className="add-file-btn">
-              Add File
-              <input
-                type="file"
-                multiple
-                onChange={(event) => handleUpload(event, 0, 'grantee')}
-                style={{ display: 'none' }}
-              />
-            </label>
-          </div>
-          {granteeFiles.length === 0 ? (
-            <p>No files uploaded yet.</p>
-          ) : (
-            <ul style={{ paddingLeft: '20px', marginTop: '10px' }}>
-              {granteeFiles.map((file) => (
-                <li key={file.filename} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.filename}</span>
-                  <FaTrash 
-                    style={{ cursor: 'pointer', color: 'red', flexShrink: 0 }} 
-                    onClick={() => handleDelete(file.id)} 
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <div style={{ display: 'flex', flexDirection: 'row', marginTop: '20px' }}>
-            <h1 style={{ fontWeight: 'bold' }}>Grantor Files</h1>
-            <label style={{}} className="add-file-btn">
-              Add File
-              <input
-                type="file"
-                multiple
-                onChange={(event) => handleUpload(event, 0, 'grantor')}
-                style={{ display: 'none' }}
-              />
-            </label>
-          </div>
-          {grantorFiles.length === 0 ? (
-            <p>No files uploaded yet.</p>
-          ) : (
-            <ul style={{ paddingLeft: '20px', marginTop: '10px' }}>
-              {grantorFiles.map((file) => (
-                <li key={file.filename} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.filename}</span>
-                  <FaTrash 
-                    style={{ cursor: 'pointer', color: 'red', flexShrink: 0 }} 
-                    onClick={() => handleDelete(file.id)} 
-                  />
+              {files.map((file) => (
+                <li 
+                  key={file.id} 
+                  onMouseEnter={() => setFocusedFile(file.id)}
+                  onMouseLeave={() => setFocusedFile(null)}
+                  style={{ backgroundColor: focusedFile === file.id && 'lightgray', padding: '10px', borderRadius: '5px', marginBottom: '5px' }}
+                >
+                  {focusedFileOrganization !== file.id && (
+                    <div style={{ display: 'flex' }}>
+                      <p style={{ 
+                        backgroundColor: organizationColors[file.file_organization], 
+                        color: 'white', 
+                        padding: '3px', 
+                        paddingRight: '10px', 
+                        paddingLeft: '10px', 
+                        borderRadius: '30px', 
+                        fontSize: '10px', 
+                        marginBottom: '2px', 
+                        marginLeft: '20px'
+                      }}>
+                        {focusedFile === file.id ? file.file_organization : ''}
+                      </p>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedFileIds.includes(file.id)}
+                      onChange={() => toggleFileSelection(file.id)}
+                      style={{ marginRight: '10px', transform: 'scale(1.3)' }}
+                    />
+                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>{file.filename}</span>
+                    {focusedFile === file.id && (
+                      <>
+                      <FaTags
+                        size={22}
+                        className='tags-btn'
+                        onClick={() => setFocusedFileOrganization(focusedFileOrganization === file.id ? null : file.id)}
+                      />
+                      <FaTrash 
+                        size={20}
+                        className='delete-btn'
+                        onClick={() => handleDelete(file.id)} 
+                      />
+                      </>
+                    )}
+                  </div>
+                  {focusedFileOrganization === file.id && (
+                    <div style={{ marginTop: '10px' }}>
+                      <p style={{ fontWeight: 'bold', fontSize: '12px', marginBottom: '5px' }}>Choose Tag</p>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <button className='file-btn' onClick={() => handleTagChange(file.id, 'reference')}>Reference</button>
+                        <button className='file-btn' onClick={() => handleTagChange(file.id, 'grantee')}>Grantee</button>
+                        <button className='file-btn' onClick={() => handleTagChange(file.id, 'grantor')}>Grantor</button>
+                      </div>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

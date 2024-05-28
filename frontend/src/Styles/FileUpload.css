@@ -46,16 +46,59 @@ ul {
 
 li {
   margin: 0;
+  border: 0.5px solid gray;
 }
-  .add-file-btn {
-    background-color: gray;
-    color: white;
-    padding: 3px 6px;
-    cursor: pointer;
-    border-radius: 5px;
-    text-align: center;
-    font-size: 14px;
-    font-weight: bold;
-    margin: 0px 10px;
-  }
-  
+
+li:hover {
+}
+
+.add-file-btn {
+  display: inline-flex;
+  align-items: center;
+  color: black;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  text-align: center;
+  font-size: 18px;
+  transition: 0.3s;
+}
+
+.add-file-btn:hover {
+  background-color: lightgray;
+}
+
+.file-btn {
+  background-color: white;
+  width: 32%;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 5px;
+  border-radius: 5px;
+  border: 2px solid gray;
+}
+
+.file-btn:hover {
+  background-color: lightgray;
+}
+
+.tags-btn {
+  color: rgb(103, 103, 103);
+  margin-right: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.tags-btn:hover {
+  color: rgb(30, 30, 30);
+}
+
+.delete-btn {
+  color: red;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.delete-btn:hover {
+  color: rgb(191, 0, 0);
+}
