@@ -12,6 +12,13 @@
 
 .show-documents {
     max-width : fit-content;
+    font-size: small;
+    padding: 4px 6px;
+    transition: 0.2s;
+}
+
+.show-documents:hover {
+    background-color: rgb(172, 172, 172);
 }
 
 

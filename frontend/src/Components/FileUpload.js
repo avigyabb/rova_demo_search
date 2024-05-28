@@ -193,7 +193,12 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
                   key={file.id} 
                   onMouseEnter={() => setFocusedFile(file.id)}
                   onMouseLeave={() => setFocusedFile(null)}
-                  style={{ backgroundColor: focusedFile === file.id && 'lightgray', padding: '10px', borderRadius: '5px', marginBottom: '5px' }}
+                  style={{ 
+                    backgroundColor: focusedFile === file.id && 'lightgray',
+                    padding: '10px', 
+                    borderRadius: '5px', 
+                    marginBottom: '5px' 
+                  }}
                 >
                   {focusedFileOrganization !== file.id && (
                     <div style={{ display: 'flex' }}>

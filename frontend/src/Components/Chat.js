@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import "../Styles/Chat.css";
 import { REACT_APP_API_URL } from "../consts";
+import { FaArrowUp, FaPaperPlane } from 'react-icons/fa';
 
 export default function Chat({ selectedSession, selectedFileIds, setSelectedFileIds, setDocuments, chatLog, setChatLog}) {
   const [inputValue, setInputValue] = useState("");
@@ -41,6 +42,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    console.log(inputValue);
     const sendMessage = async () => {
       try {
         const userChat = { user: "user", message: inputValue };
@@ -91,7 +93,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
         resizeObserver.disconnect();
       }
     };
-    }, []);
+  }, []);
 
   useEffect(() => {
     const numPixels = 9 * inputValue.length;
@@ -121,6 +123,23 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
     }
   }
 
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSubmit(e);
+      }
+    };
+
+    const textarea = document.getElementById('inputArea');
+    textarea.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      textarea.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [inputValue]);
+
   return (
     <div className="container mx-auto">
       <div className="flex flex-col bg-gray-900" style={{backgroundColor: "#e9e9e9", height : "90vh"}}>
@@ -141,7 +160,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                   </div>
                   {message.user === "assistant" &&
                     <button 
-                      className={`show-documents gray rounded-lg p-2 ml-auto ${shownSourcesIndex === index ? 'hide-sources' : ''}`} 
+                      className={`show-documents gray rounded-lg ml-auto ${shownSourcesIndex === index ? 'hide-sources' : ''}`} 
                       onClick={() => showDocuments(index)}
                     > 
                       {shownSourcesIndex === index ? 'hide sources' : 'show sources'} 
@@ -171,29 +190,30 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-none p-6">
+        <form onSubmit={handleSubmit} className="flex-none p-6 pt-0">
           <div style={{ position: "relative" }}>
-            <div className="flex rounded-lg border border-white-700 bg-white-800">
+            <div className="flex border border-white-700 bg-white-800" style={{ alignItems: "center" }}>
               <textarea
                 id="inputArea"
                 type="text"
                 className="flex-grow px-4 py-2 focus:outline-none"
                 disabled={isLoading}
-                style={{ fontFamily: "'Cerebri Sans', sans-serif", backgroundColor: "white", color: "gray", borderRadius: "8px", paddingRight: "70px" }}
+                style={{ fontFamily: "'Cerebri Sans', sans-serif", backgroundColor: "white", borderRadius: "20px", paddingRight: "70px" }}
                 rows={inputRows}
-                placeholder=""
+                placeholder="Ask a question..."
                 value={inputValue}
                 onChange={handleTyping}
               />
               <button
                 type="submit"
-                className="absolute right-0 top-0 bottom-0 m-auto rounded-lg px-4 py-2 font-semibold focus:outline-none hover:bg-purple-600 transition-colors duration-300"
-                style={{ background: "transparent" }}
-                onMouseEnter={(e) => e.target.style.color = "lightblue"}
-                onMouseLeave={(e) => e.target.style.color = "black"}
+                className="flex absolute right-1 m-auto px-3 py-1 font-semibold focus:outline-none transition-colors duration-300"
+                style={{ alignItems: "center", color: 'white', borderRadius: "20px", backgroundColor: "black" }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = "gray"}
+                onMouseLeave={(e) => e.target.style.backgroundColor = "black"}
                 disabled={isLoading}
               >
                 Send
+                <FaPaperPlane size={14} style={{ marginLeft: "8px" }}/>
               </button>
             </div>
           </div>

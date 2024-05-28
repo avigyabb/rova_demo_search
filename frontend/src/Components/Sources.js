@@ -11,7 +11,7 @@ const Sources = ({documents}) => {
         }}>
             <h1 className="text-xl" style={{marginBottom: "20px"}}>Sources</h1>
             {documents.length > 0 ? documents.map((document, index) => (
-                <div key={index} style={{marginBottom: "10px"}}>
+                <div key={index} style={{marginBottom: "30px"}}>
                     <strong style={{marginBottom: "10px"}}>{document["name"]}</strong>
                     <p style={{fontSize: "12px"}}>{document["content"]}</p>
                 </div>
