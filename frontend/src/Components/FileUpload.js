@@ -6,12 +6,18 @@ import CircularProgress from '@mui/material/CircularProgress';// Assuming you ha
 import Form from './Form.js';
 
 const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFileIds }) => {
+  console.log(selectedSession)
   const [files, setFiles] = useState([]);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [inputs, setInputs] = useState(['']);
+  const referenceFiles = files.filter(file => file.file_organization === 'reference');
+  console.log(referenceFiles)
+  const grantorFiles = files.filter(file => file.file_organization === 'grantor');
+  const granteeFiles = files.filter(file => file.file_organization === 'grantee');
+
 
 
   useEffect(() => {
@@ -19,6 +25,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
       try {
         const response = await fetch(REACT_APP_API_URL + 'files/');
         const result = await response.json();
+        console.log(result)
         setFiles(result);
         setSelectedFileIds(JSON.parse(sessionStorage.getItem('selectedFileIds')));
       } catch (error) {
@@ -58,7 +65,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
     window.location.reload();
   };
 
-  const handleUpload = async (event, isGrantApp) => {
+  const handleUpload = async (event, isGrantApp, fileOrganization) => {
     if(isGrantApp){
         toggleOverlay();
     }
@@ -68,16 +75,19 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         formData.append('selectedFileIds', JSON.stringify(selectedFileIds));
         formData.append('questions', JSON.stringify(inputs));
         formData.append('chat_session', JSON.stringify(selectedSession.id));
+        formData.append('file_organization', fileOrganization);
+        console.log(formData)
+        
         try {
-            const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
-                method: 'POST',
-                body: formData,
-            
-        });
-            const blob = await response.blob();
-            const url = URL.createObjectURL(blob);
-            setPdfUrl(url);
-            setShowPopup(true);
+          const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
+              method: 'POST',
+              body: formData,
+          });
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url);
+          setShowPopup(true);
+          console.log(response)
         } catch (error) {
             console.error('Error communicating questions files:', error);
         } finally {
@@ -92,10 +102,11 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         formData.append('selectedFileIds', JSON.stringify(selectedFileIds));
         formData.append('questions', JSON.stringify(inputs));
         formData.append('chat_session', JSON.stringify(selectedSession.id));
+        formData.append('file_organization', fileOrganization);
         try {
             const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
-            method: 'POST',
-            body: formData,
+              method: 'POST',
+              body: formData,
             });
             if (isGrantApp) {
                 const blob = await response.blob();
@@ -125,7 +136,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
   };
 
   const submitForm = () => {
-    handleUpload(null, 1);
+    handleUpload(null, 1, 'template');
   };
   
   return (
@@ -141,35 +152,93 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         <input
           type="file"
           multiple
-          onChange={(event) => handleUpload(event, 0)}
+          onChange={(event) => handleUpload(event, 0, 'reference')}
           style={{ display: 'none' }}
         />
-      </label>
+        </label>
 
         <div style={{ marginTop: '20px' }}>
           <h1 style={{ fontWeight: 'bold' }}>Uploaded Files</h1>
-          {files.length === 0 ? (
+          {referenceFiles.length === 0 ? (
             <p>No files uploaded yet.</p>
           ) : (
             <ul style={{ paddingLeft: '0px', marginTop: '10px' }}>
-              {files.map((file) => (
+              {referenceFiles.map((file) => (
                 <li key={file.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                <input
-                  type="checkbox"
-                  checked={selectedFileIds.includes(file.id)}
-                  onChange={() => toggleFileSelection(file.id)}
-                  style={{ marginRight: '10px' }}
-                />
-                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.filename}</span>
-                <FaTrash 
-                  style={{ cursor: 'pointer', color: 'red', flexShrink: 0 }} 
-                  onClick={() => handleDelete(file.id)} 
-                />
-              </li>
+                  <input
+                    type="checkbox"
+                    checked={selectedFileIds.includes(file.id)}
+                    onChange={() => toggleFileSelection(file.id)}
+                    style={{ marginRight: '10px' }}
+                  />
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.filename}</span>
+                  <FaTrash 
+                    style={{ cursor: 'pointer', color: 'red', flexShrink: 0 }} 
+                    onClick={() => handleDelete(file.id)} 
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+          
+          <div style={{ display: 'flex', flexDirection: 'row', marginTop: '20px' }}>
+            <h1 style={{ fontWeight: 'bold' }}>Grantee Files</h1>
+            <label style={{}} className="add-file-btn">
+              Add File
+              <input
+                type="file"
+                multiple
+                onChange={(event) => handleUpload(event, 0, 'grantee')}
+                style={{ display: 'none' }}
+              />
+            </label>
+          </div>
+          {granteeFiles.length === 0 ? (
+            <p>No files uploaded yet.</p>
+          ) : (
+            <ul style={{ paddingLeft: '20px', marginTop: '10px' }}>
+              {granteeFiles.map((file) => (
+                <li key={file.filename} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.filename}</span>
+                  <FaTrash 
+                    style={{ cursor: 'pointer', color: 'red', flexShrink: 0 }} 
+                    onClick={() => handleDelete(file.id)} 
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div style={{ display: 'flex', flexDirection: 'row', marginTop: '20px' }}>
+            <h1 style={{ fontWeight: 'bold' }}>Grantor Files</h1>
+            <label style={{}} className="add-file-btn">
+              Add File
+              <input
+                type="file"
+                multiple
+                onChange={(event) => handleUpload(event, 0, 'grantor')}
+                style={{ display: 'none' }}
+              />
+            </label>
+          </div>
+          {grantorFiles.length === 0 ? (
+            <p>No files uploaded yet.</p>
+          ) : (
+            <ul style={{ paddingLeft: '20px', marginTop: '10px' }}>
+              {grantorFiles.map((file) => (
+                <li key={file.filename} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.filename}</span>
+                  <FaTrash 
+                    style={{ cursor: 'pointer', color: 'red', flexShrink: 0 }} 
+                    onClick={() => handleDelete(file.id)} 
+                  />
+                </li>
               ))}
             </ul>
           )}
         </div>
+
+
         <div style={{ position: 'fixed', bottom: '0', width: '100%', margin: '20px' }}>
         <label style={{ background: "#fd7013", color: "white" }} className="custom-file-input">
             {isLoading ? (
@@ -193,7 +262,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
             <input
                 type="file"
                 multiple
-                onChange={(event) => handleUpload(event, 1)}
+                onChange={(event) => handleUpload(event, 1, 'template')}
                 style={{ display: 'none' }}
             />
         </label>

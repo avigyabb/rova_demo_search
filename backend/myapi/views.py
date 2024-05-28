@@ -32,6 +32,9 @@ from langchain_community.graphs import Neo4jGraph
 from langchain_community.vectorstores import Neo4jVector
 from neo4j import GraphDatabase
 import pandas as pd
+from pdf2image import convert_from_path
+import pytesseract
+from PIL import Image
 
 os.environ["NEO4J_URI"] = "neo4j+s://497bdb9e.databases.neo4j.io"
 os.environ["NEO4J_USERNAME"] = "neo4j"
@@ -193,7 +196,6 @@ class ChromaManager():
     def delete_from_chromadb(self, x):
         self.collection.delete(where={"source_id": x})
         with driver.session() as session:
-            print(x)
             # Cypher query to delete nodes with a specific source_id
             query = """
             MATCH (start {source_id: $source_id})
@@ -239,6 +241,11 @@ class ChromaManager():
         for idx, file_path in enumerate(file_paths):
             if file_path.endswith(".pdf"):
                 content = read_pdf(file_path)
+                if not content:
+                    images = convert_from_path(file_path)
+                    for img in images:
+                        text = pytesseract.image_to_string(img)
+                        content += text
             elif file_path.endswith(".docx"):
                 content = read_docx(file_path)
             else:
@@ -255,25 +262,37 @@ class ChromaManager():
 chroma_manager = ChromaManager(collection)
 
 class FileListView(ListAPIView):
+    print("loc1")
     queryset = UploadedFile.objects.all()
+    for item in queryset:
+        print(item)
     serializer_class = UploadedFileSerializer
 
 class FileUploadView(APIView):
     def post(self, request, is_grantapp, *args, **kwargs):
+        file_organization = 'reference'
+        print("request")
+        print(request.POST)
         try:
-            file = request.FILES['file'] 
+            print("try")
+            file = request.FILES['file']
+            print(file)
+            file_organization = request.POST.get('file_organization') 
+            print(file_organization)
         except:
+            print("except")
             file = None
         selectedFileIds = json.loads(request.POST.get('selectedFileIds'))
         selectedFileIds = [i for i in selectedFileIds if i is not None]
         provided_questions = json.loads(request.POST.get('questions'))
         chat_session_id = int(request.POST.get('chat_session'))
         chat_session = ChatSession.objects.get(id=chat_session_id)
-        print(provided_questions)
+        print("file: ", file)
         if(file is not None):
             print(default_storage.exists("uploads/"+file.name))
             # Check if the file already exists
-            if(not default_storage.exists("uploads/"+file.name) or is_grantapp):
+            if(True):
+            # if(not default_storage.exists("uploads/"+file.name) or is_grantapp):
                 # Save the file using default storage and get the full path
                 file_name = default_storage.save("uploads/" + file.name, ContentFile(file.read()))
                 full_file_path = default_storage.path(file_name)
@@ -283,7 +302,9 @@ class FileUploadView(APIView):
                     return Response({"error": "File not saved correctly"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
                 # Create an UploadedFile instance with the file path
-                uploaded_file = UploadedFile(filename=file.name, file=file_name)
+                print("loc6")
+                print(file_organization)
+                uploaded_file = UploadedFile(filename=file.name, file=file_name, file_organization=file_organization or 'reference')
                 uploaded_file.save()
 
                 serializer = UploadedFileSerializer(uploaded_file)
@@ -426,6 +447,7 @@ class ChatSessionCreateView(APIView):
     next_id = 1
 
     def post(self, request, *args, **kwargs):
+        print("loc1")
         name = request.data.get("body")
         # Create new chat session and get the id and then name is Chat #id
         session = ChatSession(name=name)

@@ -4,7 +4,7 @@ from .models import UploadedFile, ChatHistory, ChatSession
 class UploadedFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UploadedFile
-        fields = ['id', 'filename', 'file', 'upload_date']
+        fields = ['id', 'filename', 'file', 'file_organization', 'upload_date']
 
 class ChatHistorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,5 +15,3 @@ class ChatSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatSession
         fields = ['id', 'name', 'last_updated']
-
-

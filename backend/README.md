@@ -39,3 +39,6 @@ docker run \
     --env 'NEO4J_dbms_security_procedures_unrestricted=apoc.*' \
     --env NEO4JLABS_PLUGINS='["apoc"]' \
     neo4j:5.19.0
+
+# myapi_ table not found
+- commment out uploads in the get function
