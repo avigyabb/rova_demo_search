@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import "../Styles/Chat.css";
 import { REACT_APP_API_URL } from "../consts";
-import { FaArrowUp, FaPaperPlane } from 'react-icons/fa';
-import hljs from 'highlight.js';
-import 'highlight.js/styles/github-dark.css'; // Choose a style that you like
+import { FaPaperPlane } from 'react-icons/fa';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 export default function Chat({ selectedSession, selectedFileIds, setSelectedFileIds, setDocuments, chatLog, setChatLog }) {
   const [inputValue, setInputValue] = useState("");
@@ -14,7 +15,6 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   const [shownSourcesIndex, setShownSourcesIndex] = useState(null);
 
   const fetchChat = async () => {
-    console.log(selectedSession.id);
     try {
       const response = await axios.get(`${REACT_APP_API_URL}chat-history/`, {
         params: {
@@ -44,7 +44,6 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log(inputValue);
     const sendMessage = async () => {
       try {
         const userChat = { user: "user", message: inputValue };
@@ -65,31 +64,6 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
     sendMessage();
     setInputValue("");
   };
-
-  function formatGPTMessage(message) {
-    if (typeof message !== 'string') {
-      return '';
-    }
-
-    const escapeHtml = (unsafe) => {
-      return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    };
-
-    const formattedMessage = message
-      .replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
-        return `<pre class="code-block" data-lang="${language || ''}"><code>${escapeHtml(code)}</code></pre>`;
-      })
-      .replace(/\`([^\`]+)\`/g, '<code class="inline-code">$1</code>') // Handle inline code
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br>');
-
-    return formattedMessage;
-  }
 
   useEffect(() => {
     const updateWidth = () => {
@@ -157,14 +131,9 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
     };
   }, [inputValue]);
 
-  useEffect(() => {
-    // hljs.highlightAll(); // Apply highlighting to all code blocks
-  }, [chatLog]); // Run this effect every time the chat log updates
-
   return (
     <div className="container mx-auto">
       <div className="flex flex-col bg-gray-900" style={{ backgroundColor: "#e9e9e9", height: "90vh" }}>
-
         <div id="chatWindowDiv" className="flex-grow p-6" style={{ overflowY: "auto" }}>
           <div className="flex flex-col space-y-4">
             {chatLog.map((message, index) => (
@@ -174,8 +143,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                 style={{ fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word' }}
               >
                 <div className="flex items-center">
-                  <div className={`${message.user === "user" ? "blue" : "gray"} w-8 h-8 rounded-full`}>
-                  </div>
+                  <div className={`${message.user === "user" ? "blue" : "gray"} w-8 h-8 rounded-full`}></div>
                   <div className={`chat-role font-bold ${message.user === "user" ? 'none' : 'none'} rounded-lg p-2`}>
                     {message.user}
                   </div>
@@ -188,29 +156,44 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                     </button>
                   }
                 </div>
-                <div className={`rounded-lg p-2 text-left`} style={{ alignContent: 'left' }}>
-                  <div dangerouslySetInnerHTML={{ __html: formatGPTMessage(message.message) }} />
+                <div className={`rounded-lg p-2 text-left pre-wrap`} style={{ alignContent: 'left' }}>
+                  {message.user === "user" ? (
+                    <div>{message.message}</div>
+                  ) : (
+                    <ReactMarkdown
+                      components={{
+                        code({ node, inline, className, children, ...props }) {
+                          const match = /language-(\w+)/.exec(className || '');
+                          return !inline && match ? (
+                            <SyntaxHighlighter style={materialDark} language={match[1]} PreTag="div" {...props}>
+                              {String(children).replace(/\n$/, '')}
+                            </SyntaxHighlighter>
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          );
+                        }
+                      }}
+                    >
+                      {message.message}
+                    </ReactMarkdown>
+                  )}
                 </div>
               </div>
             ))}
-            {
-              isLoading &&
+            {isLoading && (
               <div
                 key={chatLog.length}
                 className={"flex flex-col justify-start"}
                 style={{ fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word' }}
               >
-                <div className={`chat-role gray rounded-lg p-2`}>
-                  assistant
-                </div>
-                <div className="rounded-lg p-2 text-left" style={{ alignContent: "left" }}>
-                  ...
-                </div>
+                <div className={`chat-role gray rounded-lg p-2`}>assistant</div>
+                <div className="rounded-lg p-2 text-left pre-wrap" style={{ alignContent: "left" }}>...</div>
               </div>
-            }
+            )}
           </div>
         </div>
-
         <form onSubmit={handleSubmit} className="flex-none p-6 pt-0">
           <div style={{ position: "relative" }}>
             <div className="flex border border-white-700 bg-white-800" style={{ alignItems: "center" }}>
@@ -239,7 +222,6 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
             </div>
           </div>
         </form>
-
       </div>
     </div>
   );

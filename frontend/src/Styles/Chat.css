@@ -21,46 +21,9 @@
   background-color: rgb(172, 172, 172);
 }
 
-pre.code-block {
-    background-color: #2d2d2d; /* Dark background */
-    color: #f8f8f2; /* Light text */
-    padding: 10px;
-    border-radius: 5px;
-    margin: 0;
-    white-space: pre-wrap; /* Ensure line breaks are preserved */
-    overflow-x: auto; /* Add horizontal scrolling if necessary */
-  }
-  
-  pre.code-block::before {
-    content: attr(data-lang); /* Use the data-lang attribute to display the language */
-    display: block;
-    background-color: #1e1e1e; /* Slightly darker background for the language label */
-    color: #dcdcdc; /* Light text color for the language label */
-    padding: 5px 10px;
-    font-family: 'Arial', sans-serif; /* Custom font for the language label */
-    font-size: 0.75em; /* Smaller font size */
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-    margin-bottom: 0; /* Remove the space between the language label and the code block */
-  }
-  
-  pre.code-block > code {
-    display: block;
-    padding-top: 5px; /* Add some padding to the top of the code */
-    font-family: 'Courier New', Courier, monospace; /* Custom font for the language label */
-    white-space: pre-wrap; /* Ensure line breaks are preserved */
-  }
-  
-  .inline-code {
-    color: #000000;
-    padding: 2px 4px;
-    font-family: 'Courier New', Courier, monospace; /* Font for inline code */
-    border-radius: 3px;
-    font-weight: 600; 
-    white-space: pre-wrap; /* Ensure line breaks are preserved */
-  }
-  
-  
+.pre-wrap {
+  white-space: pre-wrap;
+}
 
 .show-documents {
   background-color: lightgray;
@@ -68,5 +31,25 @@ pre.code-block {
 
 .show-documents.hide-sources {
   background-color: darkgray;
+}
+
+ul, ol {
+  margin-left: 20px; /* Adjust the left margin as needed */
+  padding-left: 20px; /* Adjust the padding as needed */
+  list-style-position: inside; /* Ensures bullets/numbers are inside the padding */
+  margin-top: -20px; /* Remove top margin */
+  margin-bottom: 0px; /* Remove bottom margin */
+}
+
+li {
+  margin-bottom: -20px; /* Remove the bottom margin for no additional spacing */
+  padding: 0; /* Remove any padding */
+  border: none; /* Remove any borders */
+  list-style-type: disc; /* Ensures bullet points show for unordered lists */
+}
+
+/* Specifically style ordered lists to ensure numbers show */
+ol li {
+  list-style-type: decimal; /* Ensures numbers show for ordered lists */
 }
 
