@@ -14,7 +14,7 @@ import json
 
 import chromadb
 from langchain_openai import OpenAIEmbeddings
-from .chat import respond_to_message, draft_from_questions, format_data
+from .chat import respond_to_message, draft_from_questions, format_data, document_handler
 from .utils import get_openai_embeddings, read_pdf, read_docx, chunk_text, extract_questions, clear_neo4j
 
 from openai import OpenAI
@@ -65,8 +65,6 @@ try:
 except:
     collection = chroma_client.create_collection(name="grant_docs")
 
-retrieved_documents = []
-
 class ChromaRetriever(BaseRetriever):
     """List of documents to retrieve from."""
     k: int
@@ -87,8 +85,7 @@ class ChromaRetriever(BaseRetriever):
                 document_content = results["documents"][0][index]
                 document_id = results["metadatas"][0][index]["source_id"]
                 document = UploadedFile.objects.get(pk = document_id)
-                global retrieved_documents
-                retrieved_documents.append({"name" : document.filename, "content" : document_content})
+                document_handler.retrieved_documents.append({"name" : document.filename, "content" : document_content})
             return [Document(page_content=chunk) for chunk in results['documents'][0]] # add meta_data here?
         else:
             return []
@@ -426,11 +423,10 @@ class LlmModelView(APIView):
         response = respond_to_message(llm, message, tools.update(selectedFileIds), chat_session)
 
         # Save response in chat history
-        global retrieved_documents
-        chat_history = ChatHistory(user="assistant", message=response, documents = retrieved_documents, session=chat_session)
+        chat_history = ChatHistory(user="assistant", message=response, documents = document_handler.retrieved_documents, session=chat_session)
         chat_history.save()
 
-        retrieved_documents = []
+        document_handler.retrieved_documents = []
 
         return Response({"response" : response})
 

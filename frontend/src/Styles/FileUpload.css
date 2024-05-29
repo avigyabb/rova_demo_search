@@ -49,8 +49,8 @@ li {
   border: 0.5px solid gray;
 }
 
-li:hover {
-}
+/* li:hover {
+} */
 
 .add-file-btn {
   display: inline-flex;

@@ -7,6 +7,10 @@ from langchain.agents import AgentExecutor, create_openai_tools_agent
 
 prompt = hub.pull("hwchase17/openai-tools-agent")
 
+class DocumentHandler():
+    retrieved_documents = []
+
+document_handler = DocumentHandler()
 
 def respond_to_message (llm, query, tools, chat_session):
     agent = create_openai_tools_agent(llm, tools,prompt)
@@ -54,8 +58,9 @@ def draft_from_questions(llm, questions, tools, chat_session):
     # Give draft context to assistant
     chat_history = ChatHistory(user="user", message=q['description'], session=chat_session)
     chat_history.save()
-    chat_history = ChatHistory(user="assistant", message=response, session=chat_session)
+    chat_history = ChatHistory(user="assistant", message=response, documents = document_handler.retrieved_documents, session=chat_session)
     chat_history.save()
+    document_handler.retrieved_documents = []
 
     draft[q['description']] = response
 
