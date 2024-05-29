@@ -3,8 +3,10 @@ import axios from 'axios';
 import "../Styles/Chat.css";
 import { REACT_APP_API_URL } from "../consts";
 import { FaArrowUp, FaPaperPlane } from 'react-icons/fa';
+import hljs from 'highlight.js';
+import 'highlight.js/styles/github-dark.css'; // Choose a style that you like
 
-export default function Chat({ selectedSession, selectedFileIds, setSelectedFileIds, setDocuments, chatLog, setChatLog}) {
+export default function Chat({ selectedSession, selectedFileIds, setSelectedFileIds, setDocuments, chatLog, setChatLog }) {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [inputRows, setInputRows] = useState(1);
@@ -14,11 +16,11 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   const fetchChat = async () => {
     console.log(selectedSession.id);
     try {
-        const response = await axios.get(`${REACT_APP_API_URL}chat-history/`, {
-            params: {
-                session_id: selectedSession.id,
-            },
-        });
+      const response = await axios.get(`${REACT_APP_API_URL}chat-history/`, {
+        params: {
+          session_id: selectedSession.id,
+        },
+      });
       const result = await response.data;
       setChatLog(result);
     } catch (error) {
@@ -68,9 +70,25 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
     if (typeof message !== 'string') {
       return '';
     }
-    const boldFormattedMessage = message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    const newlineFormattedMessage = boldFormattedMessage.replace(/\n/g, '<br>');
-    return newlineFormattedMessage;
+
+    const escapeHtml = (unsafe) => {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    };
+
+    const formattedMessage = message
+      .replace(/```(\w+)?\n([\s\S]*?)```/g, (match, language, code) => {
+        return `<pre class="code-block" data-lang="${language || ''}"><code>${escapeHtml(code)}</code></pre>`;
+      })
+      .replace(/\`([^\`]+)\`/g, '<code class="inline-code">$1</code>') // Handle inline code
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+
+    return formattedMessage;
   }
 
   useEffect(() => {
@@ -111,8 +129,8 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
 
   const handleTyping = (event) => {
     setInputValue(event.target.value);
-  };    
-  
+  };
+
   const showDocuments = (index) => {
     if (shownSourcesIndex === index) {
       setShownSourcesIndex(null);
@@ -122,7 +140,6 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
       setDocuments(chatLog[index].documents);
     }
   }
-
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -140,11 +157,15 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
     };
   }, [inputValue]);
 
+  useEffect(() => {
+    // hljs.highlightAll(); // Apply highlighting to all code blocks
+  }, [chatLog]); // Run this effect every time the chat log updates
+
   return (
     <div className="container mx-auto">
-      <div className="flex flex-col bg-gray-900" style={{backgroundColor: "#e9e9e9", height : "90vh"}}>
-        
-        <div id="chatWindowDiv" className="flex-grow p-6" style={{ overflowY: "auto"}}>
+      <div className="flex flex-col bg-gray-900" style={{ backgroundColor: "#e9e9e9", height: "90vh" }}>
+
+        <div id="chatWindowDiv" className="flex-grow p-6" style={{ overflowY: "auto" }}>
           <div className="flex flex-col space-y-4">
             {chatLog.map((message, index) => (
               <div
@@ -159,30 +180,30 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                     {message.user}
                   </div>
                   {message.user === "assistant" &&
-                    <button 
-                      className={`show-documents gray rounded-lg ml-auto ${shownSourcesIndex === index ? 'hide-sources' : ''}`} 
+                    <button
+                      className={`show-documents gray rounded-lg ml-auto ${shownSourcesIndex === index ? 'hide-sources' : ''}`}
                       onClick={() => showDocuments(index)}
-                    > 
-                      {shownSourcesIndex === index ? 'hide sources' : 'show sources'} 
+                    >
+                      {shownSourcesIndex === index ? 'hide sources' : 'show sources'}
                     </button>
                   }
                 </div>
-                <div className={`rounded-lg p-2 text-left`} style={{alignContent: 'left'}}>
+                <div className={`rounded-lg p-2 text-left`} style={{ alignContent: 'left' }}>
                   <div dangerouslySetInnerHTML={{ __html: formatGPTMessage(message.message) }} />
                 </div>
               </div>
             ))}
             {
               isLoading &&
-              <div 
-                key={chatLog.length} 
+              <div
+                key={chatLog.length}
                 className={"flex flex-col justify-start"}
-                style={{fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word'}}
+                style={{ fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word' }}
               >
                 <div className={`chat-role gray rounded-lg p-2`}>
                   assistant
                 </div>
-                <div className="rounded-lg p-2 text-left" style={{alignContent: "left"}}>
+                <div className="rounded-lg p-2 text-left" style={{ alignContent: "left" }}>
                   ...
                 </div>
               </div>
@@ -213,7 +234,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                 disabled={isLoading}
               >
                 Send
-                <FaPaperPlane size={14} style={{ marginLeft: "8px" }}/>
+                <FaPaperPlane size={14} style={{ marginLeft: "8px" }} />
               </button>
             </div>
           </div>

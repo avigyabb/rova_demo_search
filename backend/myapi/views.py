@@ -231,7 +231,7 @@ class ChromaManager():
             print(f"Relationships:{graph_chunks_filtered[i].relationships}")
         graph.add_graph_documents(graph_chunks_filtered, include_source=True)
 
-    #Shared event loop
+    # Shared event loop
     def handle_graph_conversion(self, chunks, idx):
         asyncio.run_coroutine_threadsafe(self.convert_to_graph_documents_and_process(chunks, idx), self.loop)
 
@@ -248,6 +248,12 @@ class ChromaManager():
                         content += text
             elif file_path.endswith(".docx"):
                 content = read_docx(file_path)
+            elif file_path.endswith(".py") or file_path.endswith(".js"):
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                doc_id = f"{ids[idx]}_0"
+                documents.append({"id": doc_id, "source_id": ids[idx], "content": content})
+                continue  # Skip chunking and graph conversion for these files
             else:
                 continue
             chunks = chunk_text(content)
