@@ -33,7 +33,8 @@
   background-color: darkgray;
 }
 
-ul, ol {
+.chat-container ul,
+.chat-container ol {
   margin-left: 20px; /* Adjust the left margin as needed */
   padding-left: 20px; /* Adjust the padding as needed */
   list-style-position: inside; /* Ensures bullets/numbers are inside the padding */
@@ -41,7 +42,7 @@ ul, ol {
   margin-bottom: 0px; /* Remove bottom margin */
 }
 
-li {
+.chat-container li {
   margin-bottom: -20px; /* Remove the bottom margin for no additional spacing */
   padding: 0; /* Remove any padding */
   border: none; /* Remove any borders */
@@ -49,7 +50,6 @@ li {
 }
 
 /* Specifically style ordered lists to ensure numbers show */
-ol li {
+.chat-container ol li {
   list-style-type: decimal; /* Ensures numbers show for ordered lists */
 }
-

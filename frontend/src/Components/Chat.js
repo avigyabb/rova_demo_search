@@ -132,7 +132,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   }, [inputValue]);
 
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto chat-container">
       <div className="flex flex-col bg-gray-900" style={{ backgroundColor: "#e9e9e9", height: "90vh" }}>
         <div id="chatWindowDiv" className="flex-grow p-6" style={{ overflowY: "auto" }}>
           <div className="flex flex-col space-y-4">
