@@ -267,11 +267,14 @@ class ChromaManager():
 chroma_manager = ChromaManager(collection)
 
 class FileListView(ListAPIView):
-    print("loc1")
-    queryset = UploadedFile.objects.all()
-    for item in queryset:
-        print(item)
+    def get_queryset(self):
+        queryset = UploadedFile.objects.all()
+        # Debugging: Print each item (not recommended in production)
+        for item in queryset:
+            print(item)
+        return queryset
     serializer_class = UploadedFileSerializer
+
 
 class FileUploadView(APIView):
     def post(self, request, is_grantapp, *args, **kwargs):
