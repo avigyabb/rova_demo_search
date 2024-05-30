@@ -198,7 +198,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                 style={{ fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word' }}
               >
                 <div className={`chat-role gray rounded-lg p-2`}>assistant</div>
-                <div className="rounded-lg p-2 text-left pre-wrap" style={{ alignContent: "left" }}>...</div>
+                <div className="typing rounded-lg p-2 text-left pre-wrap pt-4" style={{ alignContent: "left" }}></div>
               </div>
             )}
           </div>

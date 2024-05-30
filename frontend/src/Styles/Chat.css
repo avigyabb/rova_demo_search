@@ -53,3 +53,36 @@
 .chat-container ol li {
   list-style-type: decimal; /* Ensures numbers show for ordered lists */
 }
+
+.typing {
+  display: flex;
+  align-items: center;
+}
+
+.typing::after {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: gray;
+  animation: typing 1.5s steps(1) infinite;
+  margin-left: 2px;
+}
+
+@keyframes typing {
+  0%, 20% {
+    box-shadow: 0 0 0 gray;
+  }
+  40% {
+    box-shadow: 0 0 0 gray, 20px 0 0 gray;
+  }
+  60% {
+    box-shadow: 0 0 0 gray, 20px 0 0 gray, 40px 0 0 gray;
+  }
+  80%, 100% {
+    box-shadow: 0 0 0 gray, 20px 0 0 gray;
+  }
+}
+
+

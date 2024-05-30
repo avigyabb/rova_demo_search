@@ -1,22 +1,20 @@
 .custom-file-input {
-    background-color: white;
-    border-color: darkgray;
-    border-style: solid;
-    border-width: 1px;
-    
-    color: black;
-    padding: 10px 20px;
-    margin: 10px;
-    width: 200px;
-    cursor: pointer;
-    border-radius: 5px;
-    display: inline-block;
-    text-align: center;
-  }
+  background-color: lightblue;  
+  color: black;
+  padding: 10px 20px;
+  margin: 10px;
+  width: 200px;
+  cursor: pointer;
+  border-radius: 5px;
+  display: inline-block;
+  text-align: center;
+
+  transition: 0.3s;
+}
   
-  .custom-file-input:hover {
-    background-color: lightgray;
-  }
+.custom-file-input:hover {
+  background-color: rgb(148, 182, 193);
+}
 
 /* FileUpload.css */
 .session-button {

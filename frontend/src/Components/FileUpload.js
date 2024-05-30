@@ -256,7 +256,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         </div>
 
         <div style={{ position : "sticky", bottom: '0', width: '100%', margin: '20px' }}>
-          <label style={{ background: "lightblue", color: "black" }} className="custom-file-input">
+          <label className="custom-file-input">
             {isLoading ? (
               <div style={{color: 'white'}}>
                 <CircularProgress color="inherit"/>
