@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FaTrash, FaTags, FaPlus } from 'react-icons/fa';
-import "../Styles/FileUpload.css"
+import "../Styles/FileUpload.css";
 import { REACT_APP_API_URL } from "../consts";
-import CircularProgress from '@mui/material/CircularProgress';// Assuming you have Material-UI installed
+import CircularProgress from '@mui/material/CircularProgress'; // Assuming you have Material-UI installed
 import Form from './Form.js';
+import UploadPopup from './UploadPopup';
+import PdfPopup from './PdfPopup';
 
 const organizationColors = {
   'reference': 'black',
@@ -31,7 +33,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
     try {
       const response = await fetch(REACT_APP_API_URL + 'files/');
       const result = await response.json();
-      console.log(result)
+      console.log(result);
       setFiles(result);
       setSelectedFileIds(JSON.parse(sessionStorage.getItem('selectedFileIds')));
     } catch (error) {
@@ -67,73 +69,68 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
     );
   };
 
-  const handleClosePopup = () => {
-    setShowPopup(false);
-    window.location.reload();
-  };
-
   const handleUpload = async (event, isGrantApp, fileOrganization) => {
     if(isGrantApp){
-        toggleOverlay();
+      toggleOverlay();
     }
     setIsLoading(true);
     if(!event && isGrantApp) {
-        const formData = new FormData();
-        formData.append('selectedFileIds', JSON.stringify(selectedFileIds));
-        formData.append('questions', JSON.stringify(inputs));
-        formData.append('chat_session', JSON.stringify(selectedSession.id));
-        formData.append('file_organization', fileOrganization);
-        console.log(formData)
-        
-        try {
-          const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
-              method: 'POST',
-              body: formData,
-          });
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          setPdfUrl(url);
-          setShowPopup(true);
-          console.log(response)
-        } catch (error) {
-            console.error('Error communicating questions files:', error);
-        } finally {
-            setIsLoading(false);
-        }
-        return;
-    } else {
-        const newFiles = Array.from(event.target.files);    
-        for (const file of newFiles) {
       const formData = new FormData();
-      formData.append('file', file);
       formData.append('selectedFileIds', JSON.stringify(selectedFileIds));
       formData.append('questions', JSON.stringify(inputs));
       formData.append('chat_session', JSON.stringify(selectedSession.id));
       formData.append('file_organization', fileOrganization);
+      console.log(formData)
+
       try {
         const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
           method: 'POST',
           body: formData,
         });
-        if (isGrantApp) {
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          setPdfUrl(url);
-          setShowPopup(true);
-        } else {
-          const result = await response.json();
-          console.log(result);
-          if(!('error' in result)) {
-            setFiles((prevFiles) => [...prevFiles, result]);
-            setSelectedFileIds(prevIds => [...prevIds, result.id]); // Auto-select new file
-          }
-        }
-
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+        setShowPopup(true);
+        console.log(response)
       } catch (error) {
-        console.error('Error uploading files:', error);
+        console.error('Error communicating questions files:', error);
       } finally {
         setIsLoading(false);
       }
+      return;
+    } else {
+      const newFiles = Array.from(event.target.files);
+      for (const file of newFiles) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('selectedFileIds', JSON.stringify(selectedFileIds));
+        formData.append('questions', JSON.stringify(inputs));
+        formData.append('chat_session', JSON.stringify(selectedSession.id));
+        formData.append('file_organization', fileOrganization);
+        try {
+          const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
+            method: 'POST',
+            body: formData,
+          });
+          if (isGrantApp) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            setPdfUrl(url);
+            setShowPopup(true);
+          } else {
+            const result = await response.json();
+            console.log(result);
+            if(!('error' in result)) {
+              setFiles((prevFiles) => [...prevFiles, result]);
+              setSelectedFileIds(prevIds => [...prevIds, result.id]); // Auto-select new file
+            }
+          }
+
+        } catch (error) {
+          console.error('Error uploading files:', error);
+        } finally {
+          setIsLoading(false);
+        }
       }
     }
   };
@@ -177,9 +174,9 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
       overflowY: 'auto',
     }}>
       <div style = {{display : "flex", flexDirection : "column", height : "100%" }}>
-        <div style={{ marginTop: '40px', flexGrow : 1, overflowY : "auto" }}>
+      <div style={{ marginTop: '40px', flexGrow : 1, overflowY : "auto" }}>
           <label className="add-file-btn" onClick={() => setShowUploadPopup(true)}>
-            <FaPlus style={{ marginRight: '8px' }}/>
+          <FaPlus style={{ marginRight: '8px' }}/>
             Upload Documents
           </label>
 
@@ -193,7 +190,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
                   onMouseEnter={() => setFocusedFile(file.id)}
                   onMouseLeave={() => setFocusedFile(null)}
                   style={{
-                    backgroundColor: focusedFile === file.id && 'lightgray',
+                    backgroundColor: focusedFile === file.id ? 'lightgray' : 'transparent',
                     padding: '10px',
                     borderRadius: '5px',
                     marginBottom: '5px'
@@ -256,7 +253,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         </div>
 
         <div style={{ position : "sticky", bottom: '0', width: '100%', margin: '20px' }}>
-          <label className="custom-file-input">
+        <label style={{ background: "lightblue", color: "black" }} className="custom-file-input">
             {isLoading ? (
               <div style={{color: 'white'}}>
                 <CircularProgress color="inherit"/>
@@ -284,91 +281,11 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
             />
           </label>
         </div>
-
+        
       </div>
 
-      {showPopup && (
-        <div style={{
-          position: 'fixed',
-          top: '47.5%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '80%',
-          height: '90%',
-          backgroundColor: 'white',
-          overflow: 'scroll',
-          zIndex: 1000,
-          boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-          padding: '37px',
-          boxSizing: 'border-box'
-        }}>
-          <iframe
-            src={pdfUrl}
-            style={{ width: '100%', height: '100%'}}
-            frameBorder="0"
-          />
-          <button
-            onClick={() => handleClosePopup()}
-            style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1001}}
-          >
-            Close
-          </button>
-          <a href={pdfUrl} download="grant_application.pdf" style={{ position: 'absolute', bottom: '10px', right: '10px', zIndex: 1001}}>
-            Download PDF
-          </a>
-        </div>
-      )}
-
-      {showUploadPopup && (
-        <div style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '300px',
-          height: '200px',
-          backgroundColor: 'white',
-          boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-          zIndex: 1000,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flexDirection: 'column',
-        }}>
-          <button
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-            }}
-            onClick={() => {
-              setShowUploadPopup(false);
-              if (popupFileInputRef.current) {
-                popupFileInputRef.current.click();
-              }
-            }}
-          >
-            Upload Files
-          </button>
-          <button
-            style={{
-              marginTop: '20px',
-              padding: '10px 20px',
-              backgroundColor: '#6c757d',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-            }}
-            onClick={() => setShowUploadPopup(false)}
-          >
-            Close
-          </button>
-        </div>
-      )}
+      {showPopup && <PdfPopup pdfUrl={pdfUrl} onClose={() => setShowPopup(false)} />}
+      {showUploadPopup && <UploadPopup onClose={() => setShowUploadPopup(false)} popupFileInputRef={popupFileInputRef} handleUpload={handleUpload} />}
       <input
         type="file"
         ref={popupFileInputRef}

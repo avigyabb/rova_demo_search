@@ -11,6 +11,8 @@ from django.core.files.base import ContentFile
 import asyncio
 import threading
 import json
+import requests
+from bs4 import BeautifulSoup
 
 import chromadb
 from langchain_openai import OpenAIEmbeddings
@@ -466,3 +468,41 @@ class ChatSessionRenameView(APIView):
         session.name = request.data.get("name")
         session.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+      
+class UrlUploadView(APIView):
+    def post(self, request, *args, **kwargs):
+        # # Get the url and selectedFileIds from the request
+        # url = request.data.get('url')
+
+        # # Scrape the text from the URL
+        # try:
+        #     response = requests.get(url)
+        #     response.raise_for_status()
+        # except requests.exceptions.RequestException as e:
+        #     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # soup = BeautifulSoup(response.content, 'html.parser')
+        # text = soup.get_text(separator=' ', strip=True)
+
+        # if not text:
+        #     return Response({"error": "Unable to extract text from the URL"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # # Chunk and store the text in ChromaDB
+        # chunks = chunk_text(text)
+        # documents = []
+
+        # for jdx, chunk in enumerate(chunks):
+        #     doc_id = f"{url}_{jdx}"
+        #     documents.append({"id": doc_id, "source_id": url, "content": chunk.page_content})
+
+        # chroma_manager.store_document_in_chromadb(documents)
+
+        # # Store the URL in the database
+        # uploaded_file = UploadedFile(filename=url, file=None, file_organization='reference')
+        # uploaded_file.save()
+        # serializer = UploadedFileSerializer(uploaded_file)
+
+        # return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
