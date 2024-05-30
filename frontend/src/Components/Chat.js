@@ -68,7 +68,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   useEffect(() => {
     const updateWidth = () => {
       const inputArea = document.getElementById("inputArea");
-      setInputAreaWidth(inputArea.offsetWidth - 70 - 16);
+      setInputAreaWidth(inputArea.offsetWidth - 100 - 16);
     };
 
     updateWidth();
@@ -88,8 +88,17 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   }, []);
 
   useEffect(() => {
-    const numPixels = 9 * inputValue.length;
-    const newNumRows = Math.ceil(numPixels / inputAreaWidth);
+    const inputLines = inputValue.split("\n")
+    let newNumRows = 0
+    for (let i =0; i < inputLines.length; i++) {
+      if (inputLines[i].length == 0) {
+        newNumRows += 1
+      } else {
+        const numPixels = 9 * inputLines[i].length
+        newNumRows += Math.ceil(numPixels / inputAreaWidth)
+      }
+    }
+
     if (newNumRows > 1) {
       if (newNumRows < 6) {
         setInputRows(newNumRows);
@@ -202,7 +211,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                 type="text"
                 className="flex-grow px-4 py-2 focus:outline-none"
                 disabled={isLoading}
-                style={{ fontFamily: "'Cerebri Sans', sans-serif", backgroundColor: "white", borderRadius: "20px", paddingRight: "70px" }}
+                style={{ fontFamily: "'Cerebri Sans', sans-serif", backgroundColor: "white", borderRadius: "20px", paddingRight: "100px" }}
                 rows={inputRows}
                 placeholder="Ask a question..."
                 value={inputValue}
