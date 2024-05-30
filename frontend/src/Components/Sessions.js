@@ -111,7 +111,7 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   };
 
   useEffect(() => {
-    fetchSessions(0);
+    fetchSessions(selectedSession.id);
   }, []);
 
   return (
