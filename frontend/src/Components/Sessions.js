@@ -23,9 +23,11 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
       const response = await fetch(REACT_APP_API_URL + 'chat-sessions/');
       const result = await response.json();
       setSessions(result.map((session, index) => ({ ...session, name: session.name })));
-      
+      const ids = result.map(session => session.id);
+      console.log("ids", ids)
       if (result.length > 0) {
-        const sessionToSelect = selectIndex >= 0 && selectIndex < result.length ? result[selectIndex] : result[result.length - 1];
+        const sessionToSelect = ids.includes(selectIndex) ? result[ids.indexOf(selectIndex)] : result[result.length - 1];
+        console.log("sessionToSelect", sessionToSelect, "result", result)
         setSelectedSession(sessionToSelect);
         fetchChat(sessionToSelect.id); // Fetch chat history for the selected session
       }
