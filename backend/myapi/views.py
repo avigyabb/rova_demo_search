@@ -349,7 +349,7 @@ class FileUploadView(APIView):
             elements = []
 
             for question, answer in draft.items():
-                elements.append(Paragraph(f"<b>{question}:</b>", styles['Heading2']))
+                elements.append(Paragraph(f"<b>{question}</b>", styles['Heading2']))
                 elements.append(Paragraph(answer, styles['BodyText']))
                 elements.append(Spacer(1, 12))  # Add space between questions
 
