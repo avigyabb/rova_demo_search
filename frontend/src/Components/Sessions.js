@@ -111,7 +111,13 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   };
 
   useEffect(() => {
-    fetchSessions(selectedSession.id);
+    console.log(selectedSession);
+    if (selectedSession) {
+      fetchSessions(selectedSession.id);
+    } else {
+      console.log('No session selected');
+      fetchSessions();
+    }
   }, []);
 
   return (
