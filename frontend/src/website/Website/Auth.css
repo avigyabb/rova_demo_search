@@ -1,0 +1,5 @@
+.button {
+    background-color: white; /* Light background for visibility */
+    color: black; /* Dark text for contrast */
+    border: 1px solid white; /* Optional: white border for better visibility */
+  }

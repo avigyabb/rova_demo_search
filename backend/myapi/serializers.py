@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import UploadedFile, ChatHistory, ChatSession
+from django.contrib.auth.models import User
 
 class UploadedFileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,3 +16,13 @@ class ChatSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatSession
         fields = ['id', 'name', 'last_updated']
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['username', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
