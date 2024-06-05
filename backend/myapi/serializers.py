@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import UploadedFile, ChatHistory, ChatSession
-from django.contrib.auth.models import User
+from .models import UploadedFile, ChatHistory, ChatSession, User
 
 class UploadedFileSerializer(serializers.ModelSerializer):
     class Meta:
