@@ -291,8 +291,8 @@ class FileUploadView(APIView):
         chat_session = ChatSession.objects.get(id=chat_session_id)
         if(file is not None):
             # Check if the file already exists
-            #if(True):
-            if(not default_storage.exists("uploads/"+file.name) or is_grantapp):
+            if(True):
+            #if(not default_storage.exists("uploads/"+file.name) or is_grantapp):
                 # Save the file using default storage and get the full path
                 file_name = default_storage.save("uploads/" + file.name, ContentFile(file.read()))
                 full_file_path = default_storage.path(file_name)
