@@ -13,9 +13,9 @@ const Auth = () => {
 
   const handleAuth = async (event) => {
     event.preventDefault();
-    const url = isLogin ? 'login-user/' : 'register-user/';
+    const url = isLogin ? 'login/' : 'register/';
     try {
-      const response = await axios.post(process.env.REACT_APP_API_URL + url, {
+      const response = await axios.post('http://127.0.0.1:8000/' + url, {
         username: username,
         password: password,
         ...(isLogin ? {} : { email: email }) // Include email if registering

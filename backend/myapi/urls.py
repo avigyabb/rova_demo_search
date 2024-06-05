@@ -14,6 +14,6 @@ urlpatterns = [
     path('delete-chat-session/<int:pk>/', ChatSessionDeleteView.as_view(), name = "delete-chat-session"),
     path('rename-chat-session/<int:pk>/', ChatSessionRenameView.as_view(), name = "rename-chat-session"),
     path('upload-url/', UrlUploadView.as_view(), name='upload-url'),
-    path('api/register/', CreateUserView.as_view(), name='register'),
-    path('api/login/', LoginView.as_view(), name='login'),
+    path('register/', CreateUserView.as_view(), name='register'),
+    path('login/', LoginView.as_view(), name='login'),
 ]
