@@ -23,10 +23,14 @@ const Auth = () => {
         withCredentials: true
       });
       console.log(response.data);
-      navigate(`${process.env.REACT_APP_AUTH_HEADER}/sessions`);
+      navigate(`${process.env.REACT_APP_URL_EXT}`);
     } catch (error) {
       console.log(error);
-      setError(error.response.data);
+      if (error.response && error.response.status === 401) {
+        setError('Invalid credentials. Please try again.');
+      } else {
+        setError('An unexpected error occurred');
+      }
     }
   };
 
