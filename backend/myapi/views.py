@@ -514,18 +514,20 @@ class ChatSessionRenameView(APIView):
 class UrlUploadView(APIView):
     permission_classes = [AllowAny]
     def post(self, request, *args, **kwargs):
-        # # Get the url and selectedFileIds from the request
-        # url = request.data.get('url')
+        # Get the url and selectedFileIds from the request
+        url = request.data.get('url')
 
-        # # Scrape the text from the URL
-        # try:
-        #     response = requests.get(url)
-        #     response.raise_for_status()
-        # except requests.exceptions.RequestException as e:
-        #     return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        # Scrape the text from the URL
+        try:
+            response = requests.get(url)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # soup = BeautifulSoup(response.content, 'html.parser')
-        # text = soup.get_text(separator=' ', strip=True)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        text = soup.get_text(separator=' ', strip=True)
+
+        print(text)
 
         # if not text:
         #     return Response({"error": "Unable to extract text from the URL"}, status=status.HTTP_400_BAD_REQUEST)

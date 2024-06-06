@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Auth.css';
+import { Typography } from '@mui/material';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -36,12 +37,12 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex mt-40">
-      <form onSubmit={handleAuth} className="w-full max-w-sm">
-        <div className="mb-4">
-          <label className="block text-white text-sm font-bold mb-2" htmlFor="username">
+    <div style={{ width: '21%' }}>
+      <form onSubmit={handleAuth}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10%' }}>
+          <Typography style={{ fontSize: '16px' }} htmlFor="username">
             Username
-          </label>
+          </Typography>
           <input
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             id="username"
@@ -51,10 +52,10 @@ const Auth = () => {
             onChange={(e) => setUsername(e.target.value)}
           />
         </div>
-        <div className="mb-4" style={{ display: !isLogin ? 'block' : 'none' }}>
-          <label className="block text-white text-sm font-bold mb-2" htmlFor="email">
+        <div style={{ display: !isLogin ? 'flex' : 'none', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10%' }}>
+          <Typography style={{ fontSize: '16px' }} htmlFor="email">
             Email
-          </label>
+          </Typography>
           <input
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             id="email"
@@ -64,32 +65,33 @@ const Auth = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-        <div className="mb-6">
-          <label className="block text-white text-sm font-bold mb-2" htmlFor="password">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10%' }}>
+          <Typography style={{ fontSize: '16px' }} htmlFor="password">
             Password
-          </label>
+          </Typography>
           <input
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             id="password"
             type="password"
-            placeholder="******************"
+            placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        {error && <p className="text-red-500 text-xs italic">{error}</p>}
-        <div className="flex items-center justify-between">
+        {error && <Typography style={{ color: 'red', fontSize: '14px', marginBottom: '5%'  }}>{error}</Typography>}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           <button
-            className="button bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className='login-btn'
             type="submit">
             {isLogin ? 'Login' : 'Register'}
           </button>
           <button
             type="button"
             onClick={() => setIsLogin(!isLogin)}
-            className="button bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           >
-            Switch to {isLogin ? 'Register' : 'Login'}
+            <Typography style={{ fontSize: '14px', textDecoration: 'underline' }}>
+              Switch to {isLogin ? 'Register' : 'Login'}
+            </Typography>
           </button>
         </div>
       </form>

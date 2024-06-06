@@ -17,8 +17,8 @@ const Login = () => {
         <>
         <WebNavbar />
             <div className='hero' style={{ height: '100vh', width: '100vw', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <Typography className='text-white'>Early Access</Typography>
-                <input style={{ marginLeft: '10px', width: '200px', padding: '10px'}} placeholder='Enter Code' onChange={handleLoginChange}/>
+                {/* <Typography className='text-white'>Early Access</Typography>
+                <input style={{ marginLeft: '10px', width: '200px', padding: '10px'}} placeholder='Enter Code' onChange={handleLoginChange}/> */}
                 { <Auth /> }
             </div>
         </>

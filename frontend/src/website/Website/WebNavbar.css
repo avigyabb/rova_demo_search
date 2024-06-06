@@ -78,6 +78,7 @@
     align-items: center;
     padding: 1rem;
     font-weight: 500;
+    border: none;
 }
 
 .web-header .nav-item a:hover {

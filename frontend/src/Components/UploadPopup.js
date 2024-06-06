@@ -62,7 +62,7 @@ const UploadPopup = ({ onClose, popupFileInputRef, handleUpload }) => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        flexDirection: 'column',
+        borderRadius: '15px',
       }}
       ref={popupRef}
     >
@@ -96,10 +96,10 @@ const UploadPopup = ({ onClose, popupFileInputRef, handleUpload }) => {
           </button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center', padding: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center', padding: '20px', borderRadius: '5px' }}>
           <button
             style={{
-              marginBottom: '10px',
+              marginBottom: '30px',
               padding: '10px 20px',
               backgroundColor: '#a1d3e2',
               color: 'black',
@@ -119,7 +119,6 @@ const UploadPopup = ({ onClose, popupFileInputRef, handleUpload }) => {
           </button>
           <button
             style={{
-              marginBottom: '10px',
               padding: '10px 20px',
               backgroundColor: '#cfe7dc',
               color: 'black',
