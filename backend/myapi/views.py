@@ -37,6 +37,7 @@ import pandas as pd
 from pdf2image import convert_from_path
 import pytesseract
 from PIL import Image
+from django.db.models import Q
 
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
