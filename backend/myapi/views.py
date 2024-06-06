@@ -312,6 +312,7 @@ class FileListView(ListAPIView):
 class FileUploadView(APIView):
     permission_classes = [AllowAny]
     def post(self, request, is_grantapp, *args, **kwargs):
+        print("TEST", request.user)
         file_organization = 'reference'
         try:
             file = request.FILES['file']
@@ -399,6 +400,7 @@ class FileUploadView(APIView):
 class FileDeleteView(APIView):
     permission_classes = [AllowAny]
     def delete(self, request, pk, *args, **kwargs):
+        print("TEST", request.user)
         file = get_object_or_404(UploadedFile, pk=pk)
         file_path = file.file.path
         default_storage.delete(file_path)
@@ -417,6 +419,7 @@ class FileDeleteView(APIView):
 class FileEditView(APIView):
     permission_classes = [AllowAny]
     def post(self, request, pk, *args, **kwargs):
+        print("TEST", request.user)
         file = get_object_or_404(UploadedFile, pk=pk)
         new_file_organization = request.POST.get('file_organization')
         file.file_organization = new_file_organization
@@ -429,6 +432,7 @@ class FileEditView(APIView):
 class ChatSessionDeleteView(APIView):
     permission_classes = [AllowAny]
     def delete(self, request, pk, *args, **kwargs):
+        print("TEST", request.user)
         session = get_object_or_404(ChatSession, pk=pk)
         session.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -437,6 +441,7 @@ class ChatSessionDeleteView(APIView):
 class ChatHistoryView(APIView):
     permission_classes = [AllowAny]
     def get(self, request, *args, **kwargs):
+        print("TEST", request.user)
         session_id = request.query_params.get("session_id")
         try:
             chat_session = ChatSession.objects.filter(user = request.user).get(id=session_id)
@@ -450,6 +455,7 @@ class ChatHistoryView(APIView):
 class LlmModelView(APIView):
     permission_classes = [AllowAny]
     def post(self, request, *args, **kwargs):
+        print("TEST", request.user)
         # Save message in chat history
         message = request.data.get("body")
         session_id = request.data.get("session_id")
@@ -479,6 +485,7 @@ class ChatSessionView(ListAPIView):
     serializer_class = ChatSessionSerializer
 
     def get_queryset(self):
+        print("TEST", self.request.user)
         queryset = ChatSession.objects.filter(user = self.request.user).all()
         if not queryset.exists():
             # Create a chat session using the ChatSessionCreateView
@@ -494,6 +501,7 @@ class ChatSessionCreateView(APIView):
 
     def post(self, request, *args, **kwargs):
         print("loc1")
+        print("TEST", request.user)
         name = request.data.get("body")
         # Create new chat session and get the id and then name is Chat #id
         session = ChatSession(user = request.user, name=name)
@@ -506,6 +514,7 @@ class ChatSessionCreateView(APIView):
 class ChatSessionRenameView(APIView):
     permission_classes = [AllowAny]
     def post(self, request, pk, *args, **kwargs):
+        print("TEST", request.user)
         session = get_object_or_404(ChatSession, pk=pk)
         session.name = request.data.get("name")
         session.save()
@@ -514,6 +523,7 @@ class ChatSessionRenameView(APIView):
 class UrlUploadView(APIView):
     permission_classes = [AllowAny]
     def post(self, request, *args, **kwargs):
+        print("TEST", request.user)
         # Get the url and selectedFileIds from the request
         url = request.data.get('url')
 

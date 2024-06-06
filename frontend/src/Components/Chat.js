@@ -15,8 +15,8 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   const [shownSourcesIndex, setShownSourcesIndex] = useState(null);
 
   const fetchChat = async () => {
-    const accessToken = localStorage.getItem('accessToken');
     try {
+      const accessToken = localStorage.getItem('accessToken');
       const response = await axios.get(`${REACT_APP_API_URL}chat-history/`, {
         params: {
           session_id: selectedSession.id,
@@ -43,6 +43,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
       const height = chatWindowDiv.scrollHeight;
       chatWindowDiv.scrollTop = height;
     }
+    console.log(chatLog)
   }, [chatLog]);
 
   const handleSubmit = (event) => {
@@ -160,11 +161,11 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                 style={{ fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word' }}
               >
                 <div className="flex items-center">
-                  <div className={`${message.user === "user" ? "blue" : "gray"} w-8 h-8 rounded-full`}></div>
-                  <div className={`chat-role font-bold ${message.user === "user" ? 'none' : 'none'} rounded-lg p-2`}>
-                    {message.user}
+                  <div className={`${message.user_role === "user" ? "blue" : "gray"} w-8 h-8 rounded-full`}></div>
+                  <div className={`chat-role font-bold ${message.user_role === "user" ? 'none' : 'none'} rounded-lg p-2`}>
+                    {message.user_role}
                   </div>
-                  {message.user === "assistant" &&
+                  {message.user_role === "assistant" &&
                     <button
                       className={`show-documents gray rounded-lg ml-auto ${shownSourcesIndex === index ? 'hide-sources' : ''}`}
                       onClick={() => showDocuments(index)}
@@ -174,7 +175,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                   }
                 </div>
                 <div className={`rounded-lg p-2 text-left pre-wrap`} style={{ alignContent: 'left' }}>
-                  {message.user === "user" ? (
+                  {message.user_role === "user" ? (
                     <div>{message.message}</div>
                   ) : (
                     <ReactMarkdown

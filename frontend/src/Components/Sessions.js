@@ -46,9 +46,7 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   const handleNewChat = async () => {
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await axios.post(REACT_APP_API_URL + "create-chat-session/", {
-        body: '',
-      }, {
+      const response = await axios.post(REACT_APP_API_URL + "create-chat-session/", '', {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         }

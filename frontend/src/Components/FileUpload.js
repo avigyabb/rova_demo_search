@@ -48,11 +48,10 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
   const handleDelete = async (fileId) => {
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch(REACT_APP_API_URL + `delete/${fileId}/`, {
+      const response = await fetch(`${REACT_APP_API_URL}delete/${fileId}/`, {
         method: 'DELETE',
-      }, {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`
         }
       });
       if (response.status === 204) {
@@ -95,13 +94,12 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         try {
           const accessToken = localStorage.getItem('accessToken');
           const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
-              method: 'POST',
-              body: formData,
-          }, {
-              headers: {
-                  Authorization: `Bearer ${accessToken}`,
-              }
-          });
+            method: 'POST',
+            body: formData,
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            }
+        });
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
           setPdfUrl(url);
@@ -125,12 +123,11 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         try {
             const accessToken = localStorage.getItem('accessToken');
             const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
-              method: 'POST',
-              body: formData,
-            }, {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-              }
+                method: 'POST',
+                body: formData,
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                }
             });
             if (isGrantApp) {
                 const blob = await response.blob();
@@ -169,12 +166,11 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await fetch(REACT_APP_API_URL + `edit/${fileId}/`, {
+      const response = await fetch(`${REACT_APP_API_URL}edit/${fileId}/`, {
         method: 'POST',
         body: formData,
-      }, {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`
         }
       });
       console.log(response)
