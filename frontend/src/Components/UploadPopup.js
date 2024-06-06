@@ -21,10 +21,12 @@ const UploadPopup = ({ onClose, popupFileInputRef, handleUpload }) => {
 
   const handleUrlSubmit = async () => {
     try {
+      const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(REACT_APP_API_URL + 'upload-url/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           url: url,

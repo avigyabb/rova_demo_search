@@ -20,7 +20,12 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
 
   const fetchSessions = async (selectIndex = -1) => {
     try {
-      const response = await fetch(REACT_APP_API_URL + 'chat-sessions/');
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await fetch(REACT_APP_API_URL + 'chat-sessions/', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        }
+      });
       const result = await response.json();
       setSessions(result.map((session, index) => ({ ...session, name: session.name })));
       const ids = result.map(session => session.id);
@@ -40,8 +45,13 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
 
   const handleNewChat = async () => {
     try {
+      const accessToken = localStorage.getItem('accessToken');
       const response = await axios.post(REACT_APP_API_URL + "create-chat-session/", {
         body: '',
+      }, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        }
       });
       if (response.status === 201) {
         await fetchSessions(); // Refresh sessions after creating a new one
@@ -57,8 +67,12 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
     try {
       const sessionIndex = sessions.findIndex(session => session.id === sessionId);
       const curIndex = sessions.findIndex(session => session.id === selectedSession?.id);
-
-      const response = await axios.delete(REACT_APP_API_URL + `delete-chat-session/${sessionId}/`);
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await axios.delete(REACT_APP_API_URL + `delete-chat-session/${sessionId}/`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        }
+      });
       if (response.status === 204) {
         // Session selection logic
         let newSelectIndex = -1;
@@ -86,8 +100,13 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
 
   const handleRenameSession = async (sessionId, newName) => {
     try {
+      const accessToken = localStorage.getItem('accessToken');
       const response = await axios.post(REACT_APP_API_URL + `rename-chat-session/${sessionId}/`, {
         name: newName,
+      }, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        }
       });
       if (response.status === 204) { // Note that Response(status=status.HTTP_204_NO_CONTENT) returns 204 status
         await fetchSessions(sessions.findIndex(session => session.id === selectedSession?.id));

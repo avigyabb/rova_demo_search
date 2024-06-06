@@ -23,6 +23,7 @@ const Auth = () => {
         withCredentials: true
       });
       console.log(response.data);
+      localStorage.setItem('accessToken', response.data.access);
       navigate(`${process.env.REACT_APP_URL_EXT}`);
     } catch (error) {
       console.log(error);

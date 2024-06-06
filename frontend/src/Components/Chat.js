@@ -15,11 +15,14 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   const [shownSourcesIndex, setShownSourcesIndex] = useState(null);
 
   const fetchChat = async () => {
+    const accessToken = localStorage.getItem('accessToken');
     try {
       const response = await axios.get(`${REACT_APP_API_URL}chat-history/`, {
         params: {
           session_id: selectedSession.id,
-        },
+        }, headers: {
+          Authorization: `Bearer ${accessToken}`,
+        }
       });
       const result = await response.data;
       setChatLog(result);
@@ -43,6 +46,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   }, [chatLog]);
 
   const handleSubmit = (event) => {
+    const accessToken = localStorage.getItem('accessToken');
     event.preventDefault();
     const sendMessage = async () => {
       try {
@@ -53,6 +57,10 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
           body: inputValue,
           session_id: selectedSession.id,
           file_ids: JSON.stringify(selectedFileIds)
+        }, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          }
         });
         fetchChat(selectedSession.id)
         setIsLoading(false)
