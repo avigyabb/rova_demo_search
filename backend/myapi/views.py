@@ -300,7 +300,7 @@ class FileListView(ListAPIView):
     permission_classes = [AllowAny]
     def get_queryset(self):
         print("TEST", self.request.user)
-        queryset = UploadedFile.objects.all()
+        queryset = UploadedFile.objects.filter(user = self.request.user).all()
         # Debugging: Print each item (not recommended in production)
         for item in queryset:
             print(item)
@@ -321,7 +321,7 @@ class FileUploadView(APIView):
         selectedFileIds = [i for i in selectedFileIds if i is not None]
         provided_questions = json.loads(request.POST.get('questions'))
         chat_session_id = int(request.POST.get('chat_session'))
-        chat_session = ChatSession.objects.get(id=chat_session_id)
+        chat_session = ChatSession.objects.filter(user = request.user).get(id=chat_session_id)
         if(file is not None):
             # Check if the file already exists
             if(True):
@@ -335,7 +335,7 @@ class FileUploadView(APIView):
                     return Response({"error": "File not saved correctly"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
                 # Create an UploadedFile instance with the file path
-                uploaded_file = UploadedFile(filename=file.name, file=file_name, file_organization=file_organization or 'reference')
+                uploaded_file = UploadedFile(user = request.user, filename=file.name, file=file_name, file_organization=file_organization or 'reference')
                 uploaded_file.save()
 
                 serializer = UploadedFileSerializer(uploaded_file)
@@ -438,8 +438,8 @@ class ChatHistoryView(APIView):
     def get(self, request, *args, **kwargs):
         session_id = request.query_params.get("session_id")
         try:
-            chat_session = ChatSession.objects.get(id=session_id)
-            chat_history = ChatHistory.objects.filter(session=chat_session)
+            chat_session = ChatSession.objects.filter(user = request.user).get(id=session_id)
+            chat_history = ChatHistory.objects.filter(Q(user = request.user) & Q(session=chat_session))
             serializer = ChatHistorySerializer(chat_history, many=True)
             return Response(serializer.data)
         except ChatSession.DoesNotExist:
@@ -452,7 +452,7 @@ class LlmModelView(APIView):
         # Save message in chat history
         message = request.data.get("body")
         session_id = request.data.get("session_id")
-        chat_session = ChatSession.objects.get(id=session_id)
+        chat_session = ChatSession.objects.filter(user = request.user).get(id=session_id)
         selectedFileIds = json.loads(request.data.get("file_ids"))
         selectedFileIds = [i for i in selectedFileIds if i is not None]
 
@@ -460,13 +460,13 @@ class LlmModelView(APIView):
             clear_neo4j(driver)
             return Response({"response" : "neo4j cleared"})
 
-        chat_history = ChatHistory(user="user", message=message, session=chat_session)
+        chat_history = ChatHistory(user = request.user, user_role="user", message=message, session=chat_session)
         chat_history.save()
 
         response = respond_to_message(llm, message, tools.update(selectedFileIds), chat_session)
 
         # Save response in chat history
-        chat_history = ChatHistory(user="assistant", message=response, documents = document_handler.retrieved_documents, session=chat_session)
+        chat_history = ChatHistory(user = request.user, user_role="assistant", message=response, documents = document_handler.retrieved_documents, session=chat_session)
         chat_history.save()
 
         document_handler.retrieved_documents = []
@@ -478,29 +478,26 @@ class ChatSessionView(ListAPIView):
     serializer_class = ChatSessionSerializer
 
     def get_queryset(self):
-        queryset = ChatSession.objects.all()
+        queryset = ChatSession.objects.filter(user = self.request.user).all()
         if not queryset.exists():
             # Create a chat session using the ChatSessionCreateView
-            session = ChatSession(name=f"Chat #{ChatSessionCreateView.next_id}")
-            ChatSessionCreateView.next_id += 1
+            session = ChatSession(user = self.request.user, name="New Chat")
             session.save()
             # Refresh the queryset
-            queryset = ChatSession.objects.all()
+            queryset = ChatSession.objects.filter(user = self.request.user).all()
         return queryset
 
 # add new Chat Session
 class ChatSessionCreateView(APIView):
     permission_classes = [AllowAny]
-    next_id = 1
 
     def post(self, request, *args, **kwargs):
         print("loc1")
         name = request.data.get("body")
         # Create new chat session and get the id and then name is Chat #id
-        session = ChatSession(name=name)
+        session = ChatSession(user = request.user, name=name)
         if name == "":
-            session.name = f"Chat #{ChatSessionCreateView.next_id}"
-            ChatSessionCreateView.next_id += 1
+            session.name = "New Chat"
         session.save()
         return Response(status=status.HTTP_201_CREATED)
     
