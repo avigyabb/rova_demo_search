@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './Auth.css';
 import { Typography } from '@mui/material';
+import { REACT_APP_API_URL } from "../../consts";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const Auth = () => {
     setSuccessMessage('');
     const url = isLogin ? 'login/' : 'register/';
     try {
-      const response = await axios.post('http://127.0.0.1:8000/' + url, {
+      const response = await axios.post(REACT_APP_API_URL + url, {
         username: username,
         password: password,
         ...(isLogin ? {} : { email: email }) // Include email if registering
