@@ -382,7 +382,7 @@ class FileUploadView(APIView):
                 return Response({"error": "File already exists"}, status=status.HTTP_200_OK)
         else:
             questions = extract_questions(client, None, provided_questions)
-            draft = draft_from_questions(llm, questions, tools.update(selectedFileIds, request.user.id), chat_session)
+            draft = draft_from_questions(llm, questions, tools.update(selectedFileIds, request.user.id), chat_session, request.user)
 
             # Create the PDF
             buffer = BytesIO()

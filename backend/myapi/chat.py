@@ -55,7 +55,7 @@ def draft_from_questions(llm, questions, tools, chat_session, user):
   for q in questions:
     question_text = q[list(q.keys())[0]]
     query = """Respond to the folowing question from a grant application using the given documents and context: {}""".format(question_text)
-    response = respond_to_message(llm, query, tools, chat_session)
+    response = respond_to_message(llm, query, tools, chat_session, user)
 
     # Give draft context to assistant
     chat_history = ChatHistory(user=user, user_role="user", message=q['description'], session=chat_session)
