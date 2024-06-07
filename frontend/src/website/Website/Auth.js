@@ -27,6 +27,7 @@ const Auth = () => {
       });
       if (isLogin) {
         localStorage.setItem('accessToken', response.data.access);
+        localStorage.setItem('username', username);
         navigate(`${process.env.REACT_APP_URL_EXT}`);
       } else {
         setSuccessMessage('Account created successfully.');

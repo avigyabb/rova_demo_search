@@ -16,7 +16,7 @@ class UploadedFile(models.Model):
 # Model to store chat sessions
 class ChatSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_sessions', default=-1)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, default="New Chat", blank=True)
     last_updated = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

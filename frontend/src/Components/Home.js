@@ -6,11 +6,15 @@ import Chat from './Chat.js';
 import Sessions from './Sessions.js';
 import Sources from './Sources.js';
 import ArrowButton from './ArrowButton.js';
+import UserDropdown from './UserDropdown'; // Import the new UserDropdown component
 import "../Styles/Home.css";
+import { useNavigate } from 'react-router-dom';
 
 function Home() {
+  const navigate = useNavigate();
   const [selectedSession, setSelectedSession] = useState(sessionStorage.getItem('selectedSession') ? JSON.parse(sessionStorage.getItem('selectedSession')) : null);
   const [selectedFileIds, setSelectedFileIds] = useState(sessionStorage.getItem('selectedFileIds') ? JSON.parse(sessionStorage.getItem('selectedFileIds')) : []);
+  const [userName, setUsername] = useState(localStorage.getItem('username'));
   const chatRef = useRef(null);
   const [documents, setDocuments] = useState(null)
   const [chatLog, setChatLog] = useState([])
@@ -28,6 +32,13 @@ function Home() {
   };
 
   useEffect(() => {
+    console.log(localStorage.getItem('accessToken'))
+    if (!localStorage.getItem('accessToken')) {
+      navigate('/login');
+    }
+  }, []);
+
+  useEffect(() => {
     // Save to sessionStorage when selectedFileIds changes
     sessionStorage.setItem('selectedFileIds', JSON.stringify(selectedFileIds));
   }, [selectedFileIds]);
@@ -35,8 +46,6 @@ function Home() {
   useEffect(() => {
     // Save to sessionStorage when selectedFileIds changes
     sessionStorage.setItem('selectedSession', JSON.stringify(selectedSession));
-    console.log(sessionStorage);
-    console.log(selectedSession)
   }, [selectedSession]);
 
   useEffect(() => {
@@ -46,8 +55,11 @@ function Home() {
 
   return (
     <div className="main-container" style={{ display: "flex", flexDirection: "column", height: '100vh', width: "100%"}}>
-      <div style={{ width: "100%" }}>
+      <div style={{ width: "100%", position: "relative" }}>
         <Sessions selectedSession={selectedSession} setSelectedSession={setSelectedSession} fetchChat={fetchChat} />
+        <div style={{ position: "absolute", right: "10px", top: "10px" }}>
+          {userName && <UserDropdown userName={userName} />}
+        </div>
       </div>
       <div style={{display: "flex", flexGrow: 1, overflowY : "auto"}}>
         <ArrowButton onClick={setSidebarOpen} isSidebarOpen={isSidebarOpen} />
