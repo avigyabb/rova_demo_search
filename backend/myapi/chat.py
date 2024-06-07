@@ -4,19 +4,21 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain import hub
 import os
 from langchain.agents import AgentExecutor, create_openai_tools_agent
+from django.db.models import Q
+from collections import defaultdict
 
 prompt = hub.pull("hwchase17/openai-tools-agent")
 
 class DocumentHandler():
-    retrieved_documents = []
+    retrieved_documents = defaultdict(list)
 
 document_handler = DocumentHandler()
 
-def respond_to_message (llm, query, tools, chat_session):
+def respond_to_message (llm, query, tools, chat_session, user):
     agent = create_openai_tools_agent(llm, tools,prompt)
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
-    all_messages = ChatHistory.objects.filter(session=chat_session)
+    all_messages = ChatHistory.objects.filter(Q(user = user) & Q(session=chat_session))
     messages = [SystemMessage(content="You are a helpful grant-writing assistant. \
                                        Follow the commands and answer the questions provided by the user to assist them in drafting grant applications. \
                                        Make use of all of your tools as apropriate.")]
@@ -47,7 +49,7 @@ def format_data(node_label, node_id, node_text, neighborhood_nodes):
     
     return result
 
-def draft_from_questions(llm, questions, tools, chat_session):
+def draft_from_questions(llm, questions, tools, chat_session, user):
   questions = questions['questions']
   draft = dict()
   for q in questions:
@@ -56,11 +58,11 @@ def draft_from_questions(llm, questions, tools, chat_session):
     response = respond_to_message(llm, query, tools, chat_session)
 
     # Give draft context to assistant
-    chat_history = ChatHistory(user="user", message=q['description'], session=chat_session)
+    chat_history = ChatHistory(user=user, user_role="user", message=q['description'], session=chat_session)
     chat_history.save()
-    chat_history = ChatHistory(user="assistant", message=response, documents = document_handler.retrieved_documents, session=chat_session)
+    chat_history = ChatHistory(user=user, user_role="assistant", message=response, documents = document_handler.retrieved_documents[user.id], session=chat_session)
     chat_history.save()
-    document_handler.retrieved_documents = []
+    document_handler.retrieved_documents[user.id] = []
 
     draft[q['description']] = response
 

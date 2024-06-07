@@ -102,15 +102,22 @@ class ChromaRetriever(BaseRetriever):
     """List of documents to retrieve from."""
     k: int
     selectedFileIds: list
+    user_id: int
     """Number of top results to return"""
 
     def update_selection(self, selectedFileIds):
         self.selectedFileIds = selectedFileIds
+
     # Retrieve similar documents
-    def _retrieve_similar_documents_(self, query):
+    def _retrieve_similar_documents_(self, query, user_id):
         query_embedding = get_openai_embeddings([query], embeddings_client)[0]
         if(len(self.selectedFileIds) > 0):
-            results = collection.query(query_embedding, n_results=self.k, where={"source_id": {"$in": self.selectedFileIds}})
+            results = collection.query(query_embedding, n_results=self.k, where={
+                "$and": [
+                    {"source_id": {"$in": self.selectedFileIds}},
+                    {"user_id": {"$eq": user_id}}
+                ]
+            })
         else:
             results = []#collection.query(query_embedding, n_results=self.k)
         if(len(results) > 0):
@@ -118,13 +125,13 @@ class ChromaRetriever(BaseRetriever):
                 document_content = results["documents"][0][index]
                 document_id = results["metadatas"][0][index]["source_id"]
                 document = UploadedFile.objects.get(pk = document_id)
-                document_handler.retrieved_documents.append({"name" : document.filename, "content" : document_content})
+                document_handler.retrieved_documents[self.user_id].append({"name" : document.filename, "content" : document_content})
             return [Document(page_content=chunk) for chunk in results['documents'][0]] # add meta_data here?
         else:
             return []
 
     def _get_relevant_documents(self, query: str):
-        return self._retrieve_similar_documents_(query)
+        return self._retrieve_similar_documents_(query, self.user_id)
 
 class Neo4jRetriever(BaseRetriever):
 
@@ -191,8 +198,8 @@ class Neo4jRetriever(BaseRetriever):
 class ToolWrapper:
     def __init__(self):
         pass
-    def update(self, selectedFileIds): 
-        retriever = ChromaRetriever(k=10, selectedFileIds=[])
+    def update(self, selectedFileIds, user_id): 
+        retriever = ChromaRetriever(k=10, selectedFileIds=[], user_id=user_id)
         retriever.update_selection(selectedFileIds)
         # tools
         self.simple_search_tool = create_retriever_tool(
@@ -248,7 +255,7 @@ class ChromaManager():
             ids=ids,
             embeddings=embeddings,
             documents=contents,
-            metadatas=[{"source_id": doc["source_id"]} for doc in documents],
+            metadatas=[{"source_id": doc["source_id"], "user_id": doc["user_id"]} for doc in documents],
         )
 
     async def convert_to_graph_documents_and_process(self, chunks, idx):
@@ -266,7 +273,7 @@ class ChromaManager():
         asyncio.run_coroutine_threadsafe(self.convert_to_graph_documents_and_process(chunks, idx), self.loop)
 
     # Function to parse and store files in ChromaDB
-    def parse_and_store_files(self, file_paths, ids):
+    def parse_and_store_files(self, file_paths, ids, user_id):
         documents = []
         for idx, file_path in enumerate(file_paths):
             if file_path.endswith(".pdf"):
@@ -282,14 +289,14 @@ class ChromaManager():
                 with open(file_path, 'r', encoding='utf-8') as file:
                     content = file.read()
                 doc_id = f"{ids[idx]}_0"
-                documents.append({"id": doc_id, "source_id": ids[idx], "content": content})
+                documents.append({"id": doc_id, "source_id": ids[idx], "content": content, "user_id": user_id})
                 continue  # Skip chunking and graph conversion for these files
             else:
                 continue
             chunks = chunk_text(content)
             for jdx, chunk in enumerate(chunks):
                 doc_id = f"{ids[idx]}_{jdx}"
-                documents.append({"id": doc_id, "source_id": ids[idx], "content": chunk.page_content})
+                documents.append({"id": doc_id, "source_id": ids[idx], "content": chunk.page_content, "user_id": user_id})
             
             self.handle_graph_conversion(chunks, ids[idx])
 
@@ -344,7 +351,7 @@ class FileUploadView(APIView):
 
                 if is_grantapp:
                     questions = extract_questions(client, full_file_path, provided_questions)
-                    draft = draft_from_questions(llm, questions, tools.update(selectedFileIds), chat_session)
+                    draft = draft_from_questions(llm, questions, tools.update(selectedFileIds, request.user.id), chat_session, request.user)
                     
                     # Create the PDF
                     buffer = BytesIO()
@@ -368,14 +375,14 @@ class FileUploadView(APIView):
                     default_storage.delete(full_file_path)
                     return response
                 else:
-                    chroma_manager.parse_and_store_files([full_file_path], [uploaded_file.id])
+                    chroma_manager.parse_and_store_files([full_file_path], [uploaded_file.id], request.user.id)
                     return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 print("File already exists, ignoring...")
                 return Response({"error": "File already exists"}, status=status.HTTP_200_OK)
         else:
             questions = extract_questions(client, None, provided_questions)
-            draft = draft_from_questions(llm, questions, tools.update(selectedFileIds), chat_session)
+            draft = draft_from_questions(llm, questions, tools.update(selectedFileIds, request.user.id), chat_session)
 
             # Create the PDF
             buffer = BytesIO()
@@ -470,13 +477,13 @@ class LlmModelView(APIView):
         chat_history = ChatHistory(user = request.user, user_role="user", message=message, session=chat_session)
         chat_history.save()
 
-        response = respond_to_message(llm, message, tools.update(selectedFileIds), chat_session)
+        response = respond_to_message(llm, message, tools.update(selectedFileIds, request.user.id), chat_session, request.user)
 
         # Save response in chat history
-        chat_history = ChatHistory(user = request.user, user_role="assistant", message=response, documents = document_handler.retrieved_documents, session=chat_session)
+        chat_history = ChatHistory(user = request.user, user_role="assistant", message=response, documents = document_handler.retrieved_documents[request.user.id], session=chat_session)
         chat_history.save()
 
-        document_handler.retrieved_documents = []
+        document_handler.retrieved_documents[request.user.id] = []
 
         return Response({"response" : response})
 
@@ -500,12 +507,13 @@ class ChatSessionCreateView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        print("loc1")
-        print("TEST", request.user)
+        print("test4")
         name = request.data.get("body")
         # Create new chat session and get the id and then name is Chat #id
+        print("loc3")
+        print(name)
         session = ChatSession(user = request.user, name=name)
-        if name == "":
+        if not name or name == "":
             session.name = "New Chat"
         session.save()
         return Response(status=status.HTTP_201_CREATED)
