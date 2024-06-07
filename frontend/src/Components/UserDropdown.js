@@ -12,8 +12,8 @@ function UserDropdown({ userName }) {
   };
 
   const onLogout = () => {
-    sessionStorage.removeItem('username');
-    sessionStorage.removeItem('accessToken')
+    localStorage.removeItem('username');
+    localStorage.removeItem('accessToken')
     navigate('/login');
   };
 

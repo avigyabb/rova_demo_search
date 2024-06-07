@@ -77,7 +77,9 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   useEffect(() => {
     const updateWidth = () => {
       const inputArea = document.getElementById("inputArea");
-      setInputAreaWidth(inputArea.offsetWidth - 100 - 16);
+      if (inputArea) {
+        setInputAreaWidth(inputArea.offsetWidth - 100 - 16);
+      }
     };
 
     updateWidth();
