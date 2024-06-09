@@ -191,7 +191,6 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         width: '300px', 
         backgroundColor: '#f0f0f0', 
         padding: '15px', 
-        borderRight: '1px solid black', 
         overflowY: 'auto',
       }}>
         <div style = {{display : "flex", flexDirection : "column", height : "100%" }}>

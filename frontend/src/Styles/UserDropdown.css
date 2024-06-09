@@ -7,10 +7,15 @@
   .user-dropdown-button {
     background-color: lightgray;
     color: black;
-    padding: 10px 20px;
+    padding: 5px 10px;
     border: none;
     cursor: pointer;
     font-size: 16px;
+    border-radius: 5px;
+  }
+
+  .user-dropdown-button:hover {
+    background-color: rgb(192, 192, 192);
   }
   
   .user-dropdown-content {

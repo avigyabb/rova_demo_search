@@ -140,7 +140,7 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   }, []);
 
   return (
-    <Box sx={{ borderBottom: 1, borderColor: 'divider', width: '100%', height : "10vh", display: 'flex', alignItems: 'center' }}>
+    <Box sx={{ borderBottom: 1, borderColor: 'divider', width: '100%', display: 'flex', alignItems: 'center' }}>
       {loading ? (
         <CircularProgress />
       ) : (
@@ -189,6 +189,7 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
                     </IconButton>
                   </Box>
                 }
+                sx={{ height: '7vh' }} // Change the height here
               />
             ))}
           </Tabs>

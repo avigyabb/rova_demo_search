@@ -153,7 +153,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
 
   return (
     <div className="container mx-auto chat-container">
-      <div className="flex flex-col bg-gray-900" style={{ backgroundColor: "#e9e9e9", height: "90vh" }}>
+      <div className="flex flex-col bg-gray-900" style={{ backgroundColor: "white", height: "93vh" }}>
         <div id="chatWindowDiv" className="flex-grow p-6" style={{ overflowY: "auto" }}>
           <div className="flex flex-col space-y-4">
             {chatLog.map((message, index) => (
@@ -224,13 +224,13 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
         </div>
         <form onSubmit={handleSubmit} className="flex-none p-6 pt-0">
           <div style={{ position: "relative" }}>
-            <div className="flex border border-white-700 bg-white-800" style={{ alignItems: "center" }}>
+            <div className="flex border border-white-700 bg-white-800" style={{ alignItems: "center", borderRadius: "20px"}}>
               <textarea
                 id="inputArea"
                 type="text"
                 className="flex-grow px-4 py-2 focus:outline-none"
                 disabled={isLoading}
-                style={{ fontFamily: "'Cerebri Sans', sans-serif", backgroundColor: "white", borderRadius: "20px", paddingRight: "100px" }}
+                style={{ fontFamily: "'Cerebri Sans', sans-serif", borderRadius: "20px", paddingRight: "100px" }}
                 rows={inputRows}
                 placeholder="Ask a question..."
                 value={inputValue}
