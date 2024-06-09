@@ -208,7 +208,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
           </label>
 
           {files.length === 0 ? (
-            <p>No files uploaded yet.</p>
+            <p style={{ marginTop: '10px', color: 'gray' }}>No files uploaded yet.</p>
           ) : (
             <ul style={{ paddingLeft: '0px', marginTop: '10px' }}>
               {files.map((file) => (

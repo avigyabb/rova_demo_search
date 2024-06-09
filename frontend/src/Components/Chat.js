@@ -168,12 +168,20 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                     {message.user_role}
                   </div>
                   {message.user_role === "assistant" &&
+                    <>
+                    <p style={{ fontSize: "10px", color: "gray", fontWeight: "bold", marginLeft: "auto", marginRight: "8px" }}>
+                      {message.message.length} characters
+                    </p>
+                    <p style={{ fontSize: "11px", fontWeight: "bold", marginRight: "15px" }}>
+                      {message.message.trim().split(/\s+/).filter(word => word.length > 0).length} words
+                    </p>
                     <button
-                      className={`show-documents gray rounded-lg ml-auto ${shownSourcesIndex === index ? 'hide-sources' : ''}`}
+                      className={`show-documents gray rounded-lg ${shownSourcesIndex === index ? 'hide-sources' : ''}`}
                       onClick={() => showDocuments(index)}
                     >
                       {shownSourcesIndex === index ? 'hide sources' : 'show sources'}
                     </button>
+                    </>
                   }
                 </div>
                 <div className={`rounded-lg p-2 text-left pre-wrap`} style={{ alignContent: 'left' }}>
