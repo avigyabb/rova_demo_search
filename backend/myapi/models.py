@@ -31,4 +31,4 @@ class ChatHistory(models.Model):
     session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='chats')
 
     def __str__(self):
-        return self.user
+        return self.user_role

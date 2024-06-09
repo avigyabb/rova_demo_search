@@ -1,4 +1,5 @@
 from .models import ChatHistory
+from .serializers import ChatHistorySerializer
 import json
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain import hub
@@ -14,19 +15,27 @@ class DocumentHandler():
 
 document_handler = DocumentHandler()
 
+def convert_to_history(data):
+    chat_history = []
+    for message in data:
+        #print(message)
+        if message["user_role"] == "user":
+            chat_history.append(HumanMessage(content=message["message"]))
+        elif message["user_role"] == "assistant":
+            chat_history.append(AIMessage(content=message["message"]))
+    return chat_history
+
 def respond_to_message (llm, query, tools, chat_session, user):
     agent = create_openai_tools_agent(llm, tools,prompt)
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
     all_messages = ChatHistory.objects.filter(Q(user = user) & Q(session=chat_session))
+    serializer = ChatHistorySerializer(all_messages, many=True)
+    chat_history = convert_to_history(serializer.data)
     messages = [SystemMessage(content="You are a helpful grant-writing assistant. \
                                        Follow the commands and answer the questions provided by the user to assist them in drafting grant applications. \
                                        Make use of all of your tools as apropriate.")]
-    for message in all_messages:
-        if message.user == 'user':
-            messages.append(HumanMessage(content=message.message))
-        elif message.user == 'assistant':
-            messages.append(AIMessage(content=message.message))
+    messages = chat_history + messages
     result = agent_executor.invoke({"input": query, "chat_history": messages})
     return result["output"] #response.content
 
