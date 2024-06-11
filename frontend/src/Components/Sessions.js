@@ -140,7 +140,7 @@ const Sessions = ({ selectedSession, setSelectedSession, fetchChat }) => {
   }, []);
 
   return (
-    <Box sx={{ borderBottom: 1, borderColor: 'divider', width: '100%', display: 'flex', alignItems: 'center' }}>
+    <Box sx={{ borderBottom: 1, borderColor: 'divider', width: '100%', display: 'flex', alignItems: 'center', fontFamily: "'Cerebri Sans', sans-serif" }}>
       {loading ? (
         <CircularProgress />
       ) : (

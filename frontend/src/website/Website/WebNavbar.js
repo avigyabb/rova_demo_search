@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { FaBars, FaTimes } from 'react-icons/fa'
-import logo from './images/rovalogo.png'
 import { Link } from 'react-router-dom'
 
 import './WebNavbar.css'

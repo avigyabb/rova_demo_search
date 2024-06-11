@@ -224,13 +224,13 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
         </div>
         <form onSubmit={handleSubmit} className="flex-none p-6 pt-0">
           <div style={{ position: "relative" }}>
-            <div className="flex border border-white-700 bg-white-800" style={{ alignItems: "center", borderRadius: "20px"}}>
+            <div className="flex border" style={{ alignItems: "center", borderRadius: "20px"}}>
               <textarea
                 id="inputArea"
                 type="text"
                 className="flex-grow px-4 py-2 focus:outline-none"
                 disabled={isLoading}
-                style={{ fontFamily: "'Cerebri Sans', sans-serif", borderRadius: "20px", paddingRight: "100px" }}
+                style={{ fontFamily: "'Cerebri Sans', sans-serif", borderRadius: "20px", paddingRight: "100px", backgroundColor: '#f0f0f0' }}
                 rows={inputRows}
                 placeholder="Ask a question..."
                 value={inputValue}

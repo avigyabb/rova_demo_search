@@ -2,7 +2,8 @@ import React from 'react'
 import './Hero.css'
 import WebNavbar from './WebNavbar'
 import yc from './images/yc_logo.webp'
-import rovaDemo from './rova_demo.mp4'
+import screenshot from './images/screenshot2.png'
+import integrations from './images/integrations2.png'
 import { Link } from 'react-router-dom'
 import { Typography } from '@mui/material'
 
@@ -15,16 +16,21 @@ const Hero = () => {
     return (
         <>
         <WebNavbar />
-        <div className='hero' style={{ height: '100vh' }}>
+        <div className='hero' style={{ background: 'black' }}>
             {true ? (
-                <div className='content'>
-                    <div className='content2'>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                    <div className='content' style={{ width: '50%', marginTop: '8%' }}>
+                        <Typography style={{fontSize: '50px', fontWeight: 'bold'}}> Find information to write </Typography>
+                        <Typography style={{fontSize: '50px', fontWeight: 'bold'}}> grants, 3x faster </Typography>
+
+                        <Typography style={{fontSize: '16px', fontWeight: 'normal', marginTop: '5%'}}>
+                            The AI-Powered Document Management System, for Community Foundations.
+                        </Typography>
+
                         <div className='backedby'>
                             <Typography style={{marginRight: '1%', fontSize: '14px'}}>Backed By</Typography>
                             <img src={yc} alt='yc' style={{ width: '108px', height: '30px' }}/>
                         </div>
-                            <p></p>
-                            <Typography>We are a group of friends from Stanford building something new. </Typography>
                         <div className='buttons'>
                             <div class="container">
                                 {/* <a class="button2" href={`mailto:${email}?subject=${subject}&body=${body}`}> */}
@@ -36,6 +42,23 @@ const Hero = () => {
                         </div>
                         <Typography style={{fontSize: '14px', marginTop: '1%'}}> or email us at <a href="mailto:founders@rovaai.com" style={{color: '#FF8263'}}>founders@amboralabs.com</a></Typography>
                     </div>
+                    <img 
+                        src={screenshot} 
+                        style={{ 
+                            width: '80%',
+                            borderRadius: '10px',
+                            marginTop: '5%',
+                        }}
+                    />
+                    <img 
+                        src={integrations} 
+                        style={{ 
+                            width: '80%',
+                            borderRadius: '10px',
+                            marginTop: '10%',
+                            marginBottom: '15%',
+                        }}
+                    />
                 </div>
             ) : (
                 <div className='signup flex'>
