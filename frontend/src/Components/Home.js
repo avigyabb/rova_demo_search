@@ -3,6 +3,7 @@ import FileUploadComponent from './FileUpload';
 import '../App.css';
 import posthog from '../posthog.js';
 import Chat from './Chat.js';
+import TextEditor from './TextEditor';
 import Sessions from './Sessions.js';
 import Sources from './Sources.js';
 import ArrowButton from './ArrowButton.js';
@@ -53,7 +54,7 @@ function Home() {
     sessionStorage.setItem('isSidebarOpen', JSON.stringify(isSidebarOpen));
   }, [isSidebarOpen]);
 
-  return (
+  return ( 
     <div className="main-container" style={{ display: "flex", flexDirection: "column", height: '100vh', width: "100%"}}>
       <div style={{ width: "100%", position: "relative" }}>
         <Sessions selectedSession={selectedSession} setSelectedSession={setSelectedSession} fetchChat={fetchChat} />
@@ -69,7 +70,8 @@ function Home() {
         </div>
         }
         <div style={{flexGrow : 1, overflowX : "auto", backgroundColor: "rgba(255,255,255,255)"}}>
-          <Chat ref={chatRef} selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} setDocuments = {setDocuments} chatLog = {chatLog} setChatLog = {setChatLog} />
+          {/* <Chat ref={chatRef} selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} setDocuments = {setDocuments} chatLog = {chatLog} setChatLog = {setChatLog} /> */}
+          <TextEditor />
         </div>
         {documents && (
         <div style = {{width : "300px", display : "flex"}}>
