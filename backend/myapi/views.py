@@ -206,7 +206,7 @@ class ToolWrapper:
         self.simple_search_tool = create_retriever_tool(
             retriever,
             "search_documents",
-            "Searches and returns excerpts from the documents that have uploaded by the user. Useful for extracting details about specific entities, typically only those contained within a single document. "
+            "Searches and returns excerpts from the documents that have uploaded by the user. Useful for extracting details about specific entities, typically only those contained within a single document. Use only if documents have been provided."
         )
         graph_retriever = Neo4jRetriever(k=10, selectedFileIds=[])
         graph_retriever.update_selection(selectedFileIds)
@@ -215,7 +215,7 @@ class ToolWrapper:
             "search_graph",
             "Searches across a knowledge graph of documents to reveal relationships and information useful for answering broad queries. Useful for planning long-form answers and pulling pieces of evidence from multiple documents."
         )
-        self.tools = [self.simple_search_tool, self.graph_retrieval_tool]
+        self.tools = [self.simple_search_tool] # self.graph_retrieval_tool 
         return self.tools
 
 tools = ToolWrapper()
@@ -299,7 +299,7 @@ class ChromaManager():
                 doc_id = f"{ids[idx]}_{jdx}"
                 documents.append({"id": doc_id, "source_id": ids[idx], "content": chunk.page_content, "user_id": user_id})
             
-            self.handle_graph_conversion(chunks, ids[idx])
+            # self.handle_graph_conversion(chunks, ids[idx])
 
         self.store_document_in_chromadb(documents)
 
