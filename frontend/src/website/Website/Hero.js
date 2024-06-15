@@ -34,7 +34,7 @@ const Hero = () => {
                         <div className='buttons'>
                             <div class="container">
                                 {/* <a class="button2" href={`mailto:${email}?subject=${subject}&body=${body}`}> */}
-                                <Link class="button2" to={'/'}>
+                                <Link class="button2" to={'/join-waitlist'}>
                                     <span class="label-up" style={{fontFamily: 'PoppinsFont, sans-serif'}}>Join The Waitlist 🎉</span>
                                     <span class="label-up" style={{fontFamily: 'PoppinsFont, sans-serif'}}>Join the Waitlist 🎉</span>
                                 </Link>

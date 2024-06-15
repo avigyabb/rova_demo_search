@@ -194,7 +194,6 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         overflowY: 'auto',
       }}>
         <div style = {{display : "flex", flexDirection : "column", height : "100%" }}>
-        <div style={{ marginTop: '40px', flexGrow : 1, overflowY : "auto" }}>
           <label className="add-file-btn">
             <FaPlus style={{ marginRight: '8px' }}/>
             Upload Files
@@ -205,7 +204,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
               style={{ display: 'none' }}
             />
           </label>
-
+        <div style={{ marginTop: '10px', flexGrow : 1, overflowY : "auto" }}>
           {files.length === 0 ? (
             <p style={{ marginTop: '10px', color: 'gray' }}>No files uploaded yet.</p>
           ) : (

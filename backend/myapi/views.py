@@ -43,6 +43,16 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
 
+import smtplib
+from email.message import EmailMessage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import json
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+
 class CreateUserView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
@@ -570,3 +580,39 @@ class UrlUploadView(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
     
+class JoinWaitlist(APIView):
+    permission_classes = [AllowAny] # ~ what does this do?
+    def post(self, request, *args, **kwargs):
+        print(request.data.get('first_name'))
+         # Email setup
+        fromaddr = "avigyabb@gmail.com"
+        toaddr = "avigyabb@gmail.com"
+        password = "frpt hqtd fiyj zqrn"  # Be cautious with email passwords
+
+        # SMTP server configuration
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(fromaddr, password)
+
+        # Create email
+        msg = MIMEMultipart()
+        msg['From'] = fromaddr
+        msg['To'] = toaddr
+        msg['Subject'] = "Somebody has joined the waitlist!"
+        body = {
+            "firstName": request.data.get('firstName'),
+            "lastName": request.data.get('lastName'),
+            "email": request.data.get('email'),
+            "additionalDetails": request.data.get('additionalDetails'),
+        }
+        msg.attach(MIMEText(json.dumps(body), 'plain'))
+
+        # Send email
+        try :
+            server.send_message(msg)
+            print("Email sent successfully!")
+        except Exception as e:
+            print(e)
+        server.quit()
+        
+        return Response({"message": "Successfully joined waitlist!"})

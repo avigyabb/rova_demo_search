@@ -4,76 +4,83 @@ import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import { Helmet } from 'react-helmet';
+import { REACT_APP_API_URL } from '../../consts';
 
 const FileUpload = () => {
   const [loading, setLoading] = useState('Submit');
 
-  // const handleSubmit = async (event) => {
-  //   event.preventDefault();
-  //   const formData = new FormData(event.currentTarget);
-  //   const msg = {
-  //     to: 'avigyabb@gmailcom',
-  //     from: 'avigyabb@gmailcom',
-  //     subject: 'Join Waitlist',
-  //     text: `First Name: ${formData.get('firstName')}\nLast Name: ${formData.get('lastName')}\n\nAdditional Info: ${formData.get('additionalInfo')}`,
-  //   };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    console.log(formData.get('firstName'));
 
-  //   setLoading('Uploading...');
+    setLoading('Joining...');
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      const response = await axios.post(`${REACT_APP_API_URL}join-waitlist/`, {
+        first_name: formData.get('firstName'),
+        last_name: formData.get('lastName'),
+        email: formData.get('email'),
+        additional_details: formData.get('additionalDetails'), 
+      }, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        }
+      });
 
-  //   emailjs.sendForm('service_m1chqti', 'YOUR_TEMPLATE_ID', msg, 'YOUR_USER_ID')
-  //   .then((result) => {
-  //       console.log('Email successfully sent!', result.text);
-  //   }, (error) => {
-  //       console.log('Failed to send email.', error.text);
-  //   });
-
-  //   setLoading('Submit');
-  // };
+      alert(response.data.message);
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      alert('Error joining waitlist');
+    }
+    setLoading('Submit');
+  };
 
   return (
     <div className="mt-5 flex flex-col" style={{color: "black"}}>
       <Box
-          className='box'
-          component="form"
-          noValidate
-          autoComplete="off"
+        className='box'
+        component="form"
+        noValidate
+        autoComplete="off"
+        onSubmit={handleSubmit}
       >
-          <Typography variant="h3" gutterBottom style={{ color: 'black' }}>
-              Join The Waitlist
-          </Typography>
-          <Typography className='text-sm' style={{ color: 'gray', marginBottom: '5%' }}> 
-            ambora\social is an experimental social platform where you can rank things you care about.
-          </Typography>
-          {/* <div className='flex mt-8 mb-3 justify-between gap-3'>
-              <TextField className="flex-grow" required id="firstName" name="firstName" label="First Name" variant="outlined"/>
-              <TextField className="flex-grow" required id="lastName" name="lastName" label="Last Name" variant="outlined"/>
-              <TextField
-                  className="flex-grow"
-                  required
-                  id="email"
-                  name="email"
-                  label="Email"
-                  type="email"
-                  variant="outlined"
-              />
-          </div>
+        <Typography variant="h3" gutterBottom style={{ color: 'black' }}>
+            Join The Waitlist
+        </Typography>
+        <Typography className='text-sm' style={{ color: 'gray', marginBottom: '5%' }}> 
+          The AI-Powered Document Management System, for Community Foundations.
+        </Typography>
+        <div className='flex gap-3' style={{ marginTop: '5%', marginBottom: '5%', justifyContent: 'space-between', gap: '5%'}}>
+          <TextField className="flex-grow" required id="firstName" name="firstName" label="First Name" variant="outlined"/>
+          <TextField className="flex-grow" required id="lastName" name="lastName" label="Last Name" variant="outlined"/>
           <TextField
-              id="additionalDetails"
-              name="additionalDetails"
-              label="Why do you want to join?"
-              multiline
-              rows={4}
+              className="flex-grow"
+              required
+              id="email"
+              name="email"
+              label="Email"
+              type="email"
               variant="outlined"
           />
-          <button id="submit-btn" type="submit" variant="contained" className="mt-8"> {loading} </button> */}
-          <div class="launchlist-widget mt-8 mb-8" data-key-id="7KfOUJ" style={{width: '100%', marginBottom: '5%'}}></div>
-          <Helmet>
-            <script
-              src="https://getlaunchlist.com/js/widget.js"
-              type="text/javascript"
-              defer
-            />
-          </Helmet>
+        </div>
+        <TextField
+            id="additionalDetails"
+            name="additionalDetails"
+            label="Why do you want to join?"
+            multiline
+            rows={4}
+            variant="outlined"
+        />
+        <button id="submit-btn" type="submit" variant="contained" style={{ marginTop: '5%', marginBottom: '5%' }}> {loading} </button>
+        {/* <div class="launchlist-widget mt-8 mb-8" data-key-id="7KfOUJ" style={{width: '100%', marginBottom: '5%'}}></div>
+        <Helmet>
+          <script
+            src="https://getlaunchlist.com/js/widget.js"
+            type="text/javascript"
+            defer
+          />
+        </Helmet> */}
       </Box>
     </div>
   );

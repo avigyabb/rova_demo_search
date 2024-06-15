@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (FileUploadView, FileDeleteView, FileEditView, FileListView, LlmModelView, ChatHistoryView, ChatSessionView, ChatSessionCreateView, 
-                    ChatSessionDeleteView, ChatSessionRenameView, UrlUploadView, CreateUserView, LoginView)
+                    ChatSessionDeleteView, ChatSessionRenameView, UrlUploadView, CreateUserView, LoginView, JoinWaitlist)
 
 urlpatterns = [
     path('upload/<int:is_grantapp>/', FileUploadView.as_view(), name='file-upload'),
@@ -16,4 +16,5 @@ urlpatterns = [
     path('upload-url/', UrlUploadView.as_view(), name='upload-url'),
     path('register/', CreateUserView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
+    path('join-waitlist/', JoinWaitlist.as_view(), name='join-waitlist'),
 ]

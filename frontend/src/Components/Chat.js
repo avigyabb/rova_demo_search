@@ -20,7 +20,8 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
       const response = await axios.get(`${REACT_APP_API_URL}chat-history/`, {
         params: {
           session_id: selectedSession.id,
-        }, headers: {
+        }, 
+        headers: {
           Authorization: `Bearer ${accessToken}`,
         }
       });
@@ -160,7 +161,12 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
               <div
                 key={index}
                 className={`flex flex-col justify-start`}
-                style={{ fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word' }}
+                style={{ 
+                  fontFamily: "'Cerebri Sans', sans-serif", 
+                  wordWrap: 'break-word', 
+                  backgroundColor: message.user_role === "user" ? '#f0f0f0' : '', 
+                  padding: message.user_role === "user" ? '8px' : '', 
+                  borderRadius: message.user_role === "user" ? '15px' : '' }}
               >
                 <div className="flex items-center">
                   <div className={`${message.user_role === "user" ? "blue" : "gray"} w-8 h-8 rounded-full`}></div>

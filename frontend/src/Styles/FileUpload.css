@@ -57,9 +57,9 @@ li {
   padding: 5px 10px;
   cursor: pointer;
   border-radius: 5px;
-  text-align: center;
   font-size: 18px;
   transition: 0.3s;
+  margin-left: auto;
 }
 
 .add-file-btn:hover {
