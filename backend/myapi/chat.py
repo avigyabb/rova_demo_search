@@ -33,7 +33,8 @@ def respond_to_message (llm, query, tools, chat_session, user):
     serializer = ChatHistorySerializer(all_messages, many=True)
     chat_history = convert_to_history(serializer.data)
     messages = [SystemMessage(content="You are a helpful grant-writing assistant. \
-                                       Follow the commands and answer the questions provided by the user to assist them in drafting grant applications.")]
+                                       Follow the commands and answer the questions provided by the user to assist them in drafting grant applications. \
+                                       You may use the tools provided to you to assist with your answer. ")]
     messages = chat_history + messages
     result = agent_executor.invoke({"input": query, "chat_history": messages})
     return result["output"] #response.content

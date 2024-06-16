@@ -90,7 +90,7 @@ RELATIONSHIPS = ["LOCATED_IN", "HELPS", "FUNDING_FOR", "SUPPORTING_RESEARCH"]
 PROPS = ["text"]
 
 driver = GraphDatabase.driver(os.environ["NEO4J_URI"], auth=(os.environ["NEO4J_USERNAME"], os.environ["NEO4J_PASSWORD"]))
-llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0) #ChatOllama(model = 'qwen:0.5b') #base_url="http://ollama:11434"
+llm = ChatOpenAI(model_name="gpt-4-turbo", temperature=0) #ChatOllama(model = 'qwen:0.5b') #base_url="http://ollama:11434"
 llm_transformer_filtered = LLMGraphTransformer(
     llm=llm,
     allowed_nodes=NODES,
@@ -216,7 +216,7 @@ class ToolWrapper:
         self.simple_search_tool = create_retriever_tool(
             retriever,
             "search_documents",
-            "Searches and returns excerpts from the documents that have uploaded by the user. Useful for extracting details about specific entities, typically only those contained within a single document. Use only if documents have been provided."
+            "Searches and returns excerpts from the documents that have uploaded by the user. Useful for extracting details about specific entities, typically only those contained within a single document."
         )
         graph_retriever = Neo4jRetriever(k=10, selectedFileIds=[])
         graph_retriever.update_selection(selectedFileIds)
