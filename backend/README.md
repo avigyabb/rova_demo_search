@@ -25,6 +25,11 @@ ollama pull gemma:2b
 # To stop all containers
 docker stop $(docker ps -a -q)
 
+# To copy over conatiner to local (run all 3)
+docker cp django:/var/app/db.sqlite3 backend
+docker cp django:/var/app/uploads/ backend
+docker cp django:/var/app/chroma/ backend
+
 # If cert.pem or privkey.pem not found check permissions, ensure readability
 sudo su
 su root
