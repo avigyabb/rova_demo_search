@@ -12,20 +12,17 @@ const FileUpload = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    console.log(formData.get('firstName'));
 
     setLoading('Joining...');
     try {
       const accessToken = localStorage.getItem('accessToken');
-      const response = await axios.post(`${REACT_APP_API_URL}join-waitlist/`, {
+      const response = await axios.post(REACT_APP_API_URL + 'join-waitlist/', {
         first_name: formData.get('firstName'),
         last_name: formData.get('lastName'),
         email: formData.get('email'),
         additional_details: formData.get('additionalDetails'), 
       }, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        }
+        withCredentials: true
       });
 
       alert(response.data.message);
@@ -67,7 +64,7 @@ const FileUpload = () => {
         <TextField
             id="additionalDetails"
             name="additionalDetails"
-            label="Why do you want to join?"
+            label="Additional Notes"
             multiline
             rows={4}
             variant="outlined"

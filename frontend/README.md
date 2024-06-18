@@ -68,17 +68,3 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-
-Backend url: http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com
-
-
-Embedding Dimension Error
-- delete chroma folder in backend
-- delete uploads folder in backend
-- delete dbsqlite file
-- run make migrations
-- run migrate
-
-brew install tesseract
-brew install poppler  
-xcode-select --install 

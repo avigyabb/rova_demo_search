@@ -47,3 +47,17 @@ docker run \
 
 # myapi_ table not found
 - commment out uploads in the get function
+
+# Backend url: http://ec2-3-14-168-197.us-east-2.compute.amazonaws.com
+
+# Embedding Dimension Error
+- delete chroma folder in backend
+- delete uploads folder in backend
+- delete dbsqlite file
+- run make migrations
+- run migrate
+
+# read pdfs
+- brew install tesseract
+- brew install poppler  
+- xcode-select --install 

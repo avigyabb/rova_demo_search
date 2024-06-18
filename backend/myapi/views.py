@@ -580,13 +580,12 @@ class UrlUploadView(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-class JoinWaitlist(APIView):
-    permission_classes = [AllowAny] # ~ what does this do?
-    def post(self, request, *args, **kwargs):
-        print(request.data.get('first_name'))
+class JoinWaitlist(APIView):  
+    permission_classes = [AllowAny]  
+    def post(self, request):
          # Email setup
         fromaddr = "avigyabb@gmail.com"
-        toaddr = "avigyabb@gmail.com"
+        toaddr = "founders@amboralabs.com"
         password = "frpt hqtd fiyj zqrn"  # Be cautious with email passwords
 
         # SMTP server configuration
@@ -600,10 +599,10 @@ class JoinWaitlist(APIView):
         msg['To'] = toaddr
         msg['Subject'] = "Somebody has joined the waitlist!"
         body = {
-            "firstName": request.data.get('firstName'),
-            "lastName": request.data.get('lastName'),
+            "firstName": request.data.get('first_name'),
+            "lastName": request.data.get('last_name'),
             "email": request.data.get('email'),
-            "additionalDetails": request.data.get('additionalDetails'),
+            "additionalDetails": request.data.get('additional_details'),
         }
         msg.attach(MIMEText(json.dumps(body), 'plain'))
 
