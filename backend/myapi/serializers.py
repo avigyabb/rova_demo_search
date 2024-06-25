@@ -14,7 +14,7 @@ class ChatHistorySerializer(serializers.ModelSerializer):
 class ChatSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChatSession
-        fields = ['id', 'name', 'last_updated']
+        fields = ['id', 'name', 'last_updated', 'editor_backup']
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

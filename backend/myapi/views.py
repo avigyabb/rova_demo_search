@@ -97,7 +97,7 @@ llm_transformer_filtered = LLMGraphTransformer(
     allowed_relationships=RELATIONSHIPS,
     strict_mode=True
 )
-graph = Neo4jGraph()
+graph = None #Neo4jGraph()
 
 embeddings_client = OpenAIEmbeddings(model="text-embedding-3-large") # base_url="http://ollama:11434" this is smallest model, probably not best for embeddings
 client = OpenAI() # this is for parsing templates, not used on actual data
@@ -615,3 +615,20 @@ class JoinWaitlist(APIView):
         server.quit()
         
         return Response({"message": "Successfully joined waitlist!"})
+    
+
+class ChatSessionUpdateEditorView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request, pk, *args, **kwargs):
+        print("TEST", request.user)
+        session = get_object_or_404(ChatSession, pk=pk)
+        session.editor_backup = request.data.get("editor_backup")
+        session.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class ChatSessionFetchEditorView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, pk, *args, **kwargs):
+        print("TEST", request.user)
+        session = get_object_or_404(ChatSession, pk=pk)
+        return Response({'content':session.editor_backup})
