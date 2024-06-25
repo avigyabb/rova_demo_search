@@ -61,3 +61,6 @@ docker run \
 - brew install tesseract
 - brew install poppler  
 - xcode-select --install 
+
+# files.filter error
+- login

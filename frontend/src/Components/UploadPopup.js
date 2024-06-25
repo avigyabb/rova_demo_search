@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { REACT_APP_API_URL } from "../consts";
+import '../Styles/UploadPopup.css';
 
-const UploadPopup = ({ onClose, popupFileInputRef, handleUpload }) => {
+const UploadPopup = ({ onClose, popupFileInputRef, handleUpload, fetchFiles, setIsLoading }) => {
   const popupRef = useRef();
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [url, setUrl] = useState('');
@@ -20,6 +21,8 @@ const UploadPopup = ({ onClose, popupFileInputRef, handleUpload }) => {
   }, [onClose]);
 
   const handleUrlSubmit = async () => {
+    onClose();
+    setIsLoading(true);
     try {
       const accessToken = localStorage.getItem('accessToken');      
       const response = await fetch(REACT_APP_API_URL + 'upload-url/', {
@@ -36,8 +39,9 @@ const UploadPopup = ({ onClose, popupFileInputRef, handleUpload }) => {
 
       if (response.status === 201) {
         const result = await response.json();
+        setIsLoading(false);
+        fetchFiles();
         console.log(result);
-        onClose();
       } else {
         const errorData = await response.json();
         console.error('Error uploading URL:', errorData.error);
@@ -82,6 +86,7 @@ const UploadPopup = ({ onClose, popupFileInputRef, handleUpload }) => {
             }}
           />
           <button
+            className='submit-url'
             style={{
               padding: '10px',
               backgroundColor: '#cfe7dc',
@@ -89,6 +94,7 @@ const UploadPopup = ({ onClose, popupFileInputRef, handleUpload }) => {
               border: 'none',
               borderRadius: '5px',
               cursor: 'pointer',
+              transition: '0.5s',
             }}
             onClick={handleUrlSubmit}
           >
@@ -97,35 +103,31 @@ const UploadPopup = ({ onClose, popupFileInputRef, handleUpload }) => {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', width: '100%', alignItems: 'center', padding: '20px', borderRadius: '5px' }}>
-          <button
+          <label 
+            className='upload-btn upload-file'
             style={{
-              marginBottom: '30px',
-              padding: '10px 20px',
               backgroundColor: '#a1d3e2',
-              color: 'black',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              width: '100%',
-            }}
-            onClick={() => {
-              onClose();
-              if (popupFileInputRef.current) {
-                popupFileInputRef.current.click();
-              }
+              marginBottom: '20px',
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center"
             }}
           >
             Upload Files
-          </button>
+            <input
+              type="file"
+              multiple
+              onChange={(event) => {
+                onClose()
+                handleUpload(event, 0, 'reference')
+              }}
+              style={{ display: 'none' }}
+            />
+          </label>
           <button
+            className='upload-btn upload-url'
             style={{
-              padding: '10px 20px',
               backgroundColor: '#cfe7dc',
-              color: 'black',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              width: '100%',
             }}
             onClick={() => setShowUrlInput(true)}
           >

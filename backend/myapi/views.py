@@ -130,7 +130,7 @@ class ChromaRetriever(BaseRetriever):
                 ]
             })
         else:
-            results = []#collection.query(query_embedding, n_results=self.k)
+            results = [] #collection.query(query_embedding, n_results=self.k)
         if(len(results) > 0):
             for index in range(len(results["documents"][0])):
                 document_content = results["documents"][0][index]
@@ -330,7 +330,6 @@ class FileListView(ListAPIView):
 class FileUploadView(APIView):
     permission_classes = [AllowAny]
     def post(self, request, is_grantapp, *args, **kwargs):
-        print("TEST", request.user)
         file_organization = 'reference'
         try:
             file = request.FILES['file']
@@ -420,11 +419,12 @@ class FileDeleteView(APIView):
     def delete(self, request, pk, *args, **kwargs):
         print("TEST", request.user)
         file = get_object_or_404(UploadedFile, pk=pk)
-        file_path = file.file.path
-        default_storage.delete(file_path)
+        if file.file:
+            file_path = file.file.path
+            default_storage.delete(file_path)
+            if os.path.exists(file_path):
+                os.remove(file_path)
 
-        if os.path.exists(file_path):
-            os.remove(file_path)
         try:
             chroma_manager.delete_from_chromadb(pk)
         except Exception as e:
@@ -518,11 +518,8 @@ class ChatSessionCreateView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
-        print("test4")
         name = request.data.get("body")
         # Create new chat session and get the id and then name is Chat #id
-        print("loc3")
-        print(name)
         session = ChatSession(user = request.user, name=name)
         if not name or name == "":
             session.name = "New Chat"
@@ -542,7 +539,6 @@ class ChatSessionRenameView(APIView):
 class UrlUploadView(APIView):
     permission_classes = [AllowAny]
     def post(self, request, *args, **kwargs):
-        print("TEST", request.user)
         # Get the url and selectedFileIds from the request
         url = request.data.get('url')
 
@@ -556,29 +552,25 @@ class UrlUploadView(APIView):
         soup = BeautifulSoup(response.content, 'html.parser')
         text = soup.get_text(separator=' ', strip=True)
 
-        print(text)
+        if not text:
+            return Response({"error": "Unable to extract text from the URL"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # if not text:
-        #     return Response({"error": "Unable to extract text from the URL"}, status=status.HTTP_400_BAD_REQUEST)
+        # Store the URL in the database
+        uploaded_file = UploadedFile(filename=url, file=None, file_organization='reference', user=request.user)
+        uploaded_file.save()
+        serializer = UploadedFileSerializer(uploaded_file)
 
-        # # Chunk and store the text in ChromaDB
-        # chunks = chunk_text(text)
-        # documents = []
+        # Chunk and store the text in ChromaDB
+        chunks = chunk_text(text)
+        documents = []
 
-        # for jdx, chunk in enumerate(chunks):
-        #     doc_id = f"{url}_{jdx}"
-        #     documents.append({"id": doc_id, "source_id": url, "content": chunk.page_content})
+        for jdx, chunk in enumerate(chunks):
+            doc_id = f"{uploaded_file.id}_{jdx}"
+            documents.append({"id": doc_id, "source_id": uploaded_file.id, "user_id": request.user.id, "content": chunk.page_content})
+        
+        chroma_manager.store_document_in_chromadb(documents)
 
-        # chroma_manager.store_document_in_chromadb(documents)
-
-        # # Store the URL in the database
-        # uploaded_file = UploadedFile(filename=url, file=None, file_organization='reference')
-        # uploaded_file.save()
-        # serializer = UploadedFileSerializer(uploaded_file)
-
-        # return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
 class JoinWaitlist(APIView):  
     permission_classes = [AllowAny]  

@@ -4,6 +4,7 @@ import "../Styles/FileUpload.css"
 import { REACT_APP_API_URL } from "../consts";
 import CircularProgress from '@mui/material/CircularProgress';// Assuming you have Material-UI installed
 import Form from './Form.js';
+import UploadPopup from './UploadPopup.js';
 
 const organizationColors = {
   'reference': 'black',
@@ -15,6 +16,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
   const [files, setFiles] = useState([]);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showOverlay, setShowOverlay] = useState(false);
   const [inputs, setInputs] = useState(['']);
@@ -194,15 +196,9 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         overflowY: 'auto',
       }}>
         <div style = {{display : "flex", flexDirection : "column", height : "100%" }}>
-          <label className="add-file-btn">
+          <label className="add-file-btn" onClick={() => setShowUploadPopup(true)}>
             <FaPlus style={{ marginRight: '8px' }}/>
             Upload Files
-            <input
-              type="file"
-              multiple
-              onChange={(event) => handleUpload(event, 0, 'reference')}
-              style={{ display: 'none' }}
-            />
           </label>
         <div style={{ marginTop: '10px', flexGrow : 1, overflowY : "auto" }}>
           {files.length === 0 ? (
@@ -338,6 +334,21 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
             Download PDF
           </a>
         </div>
+      )}
+
+      {showUploadPopup && (
+        <>
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black
+            zIndex: 999 // Make sure this is below the popup but above other content
+          }}></div>
+          <UploadPopup onClose={() => setShowUploadPopup(false)} handleUpload={handleUpload} fetchFiles={() => fetchFiles()} setIsLoading={setIsLoading}/>
+        </>
       )}
     </div>
   );

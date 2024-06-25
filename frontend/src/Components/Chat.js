@@ -52,7 +52,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
     event.preventDefault();
     const sendMessage = async () => {
       try {
-        const userChat = { user: "user", message: inputValue };
+        const userChat = { user_role: "user", message: inputValue };
         setChatLog((prevChatLog) => [...prevChatLog, userChat]);
         setIsLoading(true);
         await axios.post(REACT_APP_API_URL + "send-message/", {
@@ -222,7 +222,13 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                 className={"flex flex-col justify-start"}
                 style={{ fontFamily: "'Cerebri Sans', sans-serif", wordWrap: 'break-word' }}
               >
-                <div className={`chat-role gray rounded-lg p-2`}>assistant</div>
+                {/* <div className={`chat-role gray rounded-lg p-2`}>assistant</div> */}
+                <div className="flex items-center">
+                  <div className={`gray w-8 h-8 rounded-full`}></div>
+                  <div className={`chat-role font-bold rounded-lg p-2`}>
+                    assistant
+                  </div>
+                </div>
                 <div className="typing rounded-lg p-2 text-left pre-wrap pt-4" style={{ alignContent: "left" }}></div>
               </div>
             )}

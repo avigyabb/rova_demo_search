@@ -25,8 +25,8 @@ def convert_to_history(data):
             chat_history.append(AIMessage(content=message["message"]))
     return chat_history
 
-def respond_to_message (llm, query, tools, chat_session, user):
-    agent = create_openai_tools_agent(llm, tools,prompt)
+def respond_to_message(llm, query, tools, chat_session, user):
+    agent = create_openai_tools_agent(llm, tools, prompt)
     agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
     all_messages = ChatHistory.objects.filter(Q(user = user) & Q(session=chat_session))
@@ -37,6 +37,7 @@ def respond_to_message (llm, query, tools, chat_session, user):
                                        You may use the tools provided to you to assist with your answer. ")]
     messages = chat_history + messages
     result = agent_executor.invoke({"input": query, "chat_history": messages})
+    print(result)
     return result["output"] #response.content
 
 def format_data(node_label, node_id, node_text, neighborhood_nodes):
