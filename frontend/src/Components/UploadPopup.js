@@ -45,6 +45,8 @@ const UploadPopup = ({ onClose, popupFileInputRef, handleUpload, fetchFiles, set
       } else {
         const errorData = await response.json();
         console.error('Error uploading URL:', errorData.error);
+        alert('Error uploading resource. Please try again.');
+        setIsLoading(false);
       }
     } catch (error) {
       console.error('Error uploading URL:', error);

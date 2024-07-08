@@ -52,6 +52,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+from urllib.parse import urlparse, urlunparse
 
 class CreateUserView(APIView):
     permission_classes = [AllowAny]
@@ -135,6 +136,8 @@ class ChromaRetriever(BaseRetriever):
             for index in range(len(results["documents"][0])):
                 document_content = results["documents"][0][index]
                 document_id = results["metadatas"][0][index]["source_id"]
+                print('docid')
+                print(document_id)
                 document = UploadedFile.objects.get(pk = document_id)
                 document_handler.retrieved_documents[self.user_id].append({"name" : document.filename, "content" : document_content})
             return [Document(page_content=chunk) for chunk in results['documents'][0]] # add meta_data here?
@@ -480,6 +483,8 @@ class LlmModelView(APIView):
         chat_session = ChatSession.objects.filter(user = request.user).get(id=session_id)
         selectedFileIds = json.loads(request.data.get("file_ids"))
         selectedFileIds = [i for i in selectedFileIds if i is not None]
+        print('loc14')
+        print(selectedFileIds)
 
         if('clear_neo4j' in message):
             clear_neo4j(driver)
@@ -542,6 +547,16 @@ class UrlUploadView(APIView):
         # Get the url and selectedFileIds from the request
         url = request.data.get('url')
 
+        # Ensure the URL has a scheme (http or https)
+        parsed_url = urlparse(url)
+        if not parsed_url.scheme:
+            if parsed_url.netloc:
+                # The URL has a netloc but no scheme
+                url = f'https://{parsed_url.netloc}{parsed_url.path}'
+            else:
+                # The URL is just a path (e.g., www.linkedin.com or linkedin.com)
+                url = f'https://{parsed_url.path}'
+
         # Scrape the text from the URL
         try:
             response = requests.get(url)
@@ -551,6 +566,8 @@ class UrlUploadView(APIView):
 
         soup = BeautifulSoup(response.content, 'html.parser')
         text = soup.get_text(separator=' ', strip=True)
+
+        links = [a.get('href') for a in soup.find_all('a', href=True)]
 
         if not text:
             return Response({"error": "Unable to extract text from the URL"}, status=status.HTTP_400_BAD_REQUEST)
@@ -564,9 +581,25 @@ class UrlUploadView(APIView):
         chunks = chunk_text(text)
         documents = []
 
-        for jdx, chunk in enumerate(chunks):
+        jdx = 0
+        for chunk in chunks:
             doc_id = f"{uploaded_file.id}_{jdx}"
             documents.append({"id": doc_id, "source_id": uploaded_file.id, "user_id": request.user.id, "content": chunk.page_content})
+            jdx += 1
+
+        # for link in links:
+        #     try:
+        #         response = requests.get(link)
+        #         response.raise_for_status()
+        #     except requests.exceptions.RequestException as e:
+        #         continue
+        #     soup = BeautifulSoup(response.content, 'html.parser')
+        #     text = soup.get_text(separator=' ', strip=True)
+        #     chunks = chunk_text(text)
+        #     for chunk in chunks:
+        #         doc_id = f"{uploaded_file.id}_{jdx}"
+        #         documents.append({"id": doc_id, "source_id": uploaded_file.id, "user_id": request.user.id, "content": chunk.page_content})
+        #         jdx += 1
         
         chroma_manager.store_document_in_chromadb(documents)
 

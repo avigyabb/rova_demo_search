@@ -8,6 +8,7 @@ import Sources from './Sources.js';
 import ArrowButton from './ArrowButton.js';
 import UserDropdown from './UserDropdown'; // Import the new UserDropdown component
 import TextEditor from './TextEditor.js';
+import Form from './Form.js';
 import "../Styles/Home.css";
 import { useNavigate } from 'react-router-dom';
 
@@ -63,7 +64,7 @@ function Home() {
 
   return (
     <div className="main-container" style={{ display: "flex", flexDirection: "column", height: '100vh', width: "100%"}}>
-      <div style={{ width: "100%", position: "relative" }}>
+      <div style={{ width: "100%", position: "relative", zIndex: 11 }}>
         <Sessions selectedSession={selectedSession} setSelectedSession={setSelectedSession} fetchChat={fetchChat} />
         <div style={{ position: "absolute", right: "140px", top: "15px" }}>
           <button onClick={toggleEditor} className="toggle-button">
@@ -74,29 +75,36 @@ function Home() {
           {userName && <UserDropdown userName={userName} />}
         </div>
       </div>
-      <div className={`${isEditorOpen ? 'app' : ''}`}>
-      <div className={`${isEditorOpen ? 'split left' : ''}`} style={{display: "flex", flexGrow: 1, overflowY : "auto"}}>
+      {/* <div className={`${isEditorOpen ? 'app' : ''}`}> */}
+      <div className={`${isEditorOpen ? 'split left' : ''}`} style={{display: "flex", flexGrow: 1, overflowY : "auto", position: "relative", zIndex: 1 }}>
         <ArrowButton onClick={setSidebarOpen} isSidebarOpen={isSidebarOpen} />
         { isSidebarOpen && 
-        <div style={{ width: "300px", display: "flex" }}>
+        <div style={{ width: "300px", display: "flex", position: 'relative', zIndex: 10 }}>
           <FileUploadComponent selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} />
+          {/* <Form
+            onClose={() => {}}
+            handleUpload={() => {}}
+            submitForm={() => {}}
+            inputs={[]}
+            setInputs={() => {}}
+          /> */}
         </div>
         }
-        <div style={{flexGrow : 1, overflowX : "auto", backgroundColor: "rgba(255,255,255,255)"}}>
+        <div style={{flexGrow : 1, overflowX : "auto", backgroundColor: "rgba(255,255,255,255)", position: "relative", zIndex: 1 }}>
           <Chat ref={chatRef} selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} setDocuments = {setDocuments} chatLog = {chatLog} setChatLog = {setChatLog} />
         </div>
         {documents && (
-        <div style = {{width : "300px", display : "flex"}}>
+        <div style = {{width : "300px", display : "flex", position : "relative", zIndex : 2}}>
           <Sources documents = {documents}/>
         </div>)}
+        {isEditorOpen && (
+          <div style={{ width: '100%', backgroundColor: 'white' }}>
+            <TextEditor selectedSession={selectedSession} />
+          </div>
+        )}
       </div>
-      {isEditorOpen && (
-        <div className="split right">
-          <TextEditor selectedSession={selectedSession} />
-        </div>
-      )}
       </div>
-    </div>
+    // </div>
   );
 }
 

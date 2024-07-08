@@ -101,7 +101,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
             headers: {
                 Authorization: `Bearer ${accessToken}`,
             }
-        });
+          });
           const blob = await response.blob();
           const url = URL.createObjectURL(blob);
           setPdfUrl(url);
@@ -280,17 +280,8 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
                 <CircularProgress color="inherit"/>
                 </div>
             ) : (
-                <div>
+                <div style={{ zIndex: 1000 }}>
                 <button onClick={toggleOverlay}>Draft Grant</button>
-                {showOverlay && (
-                <Form
-                    onClose={toggleOverlay}
-                    handleUpload={handleUpload}
-                    submitForm={submitForm}
-                    inputs={inputs}
-                    setInputs={setInputs}
-                />
-                )}
                 </div>
             )}
             <input
@@ -303,6 +294,16 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
     </div>
 
     </div>
+
+    {showOverlay && (
+      <Form
+        onClose={toggleOverlay}
+        handleUpload={handleUpload}
+        submitForm={submitForm}
+        inputs={inputs}
+        setInputs={setInputs}
+      />
+    )}
 
     {showPopup && (
         <div style={{

@@ -15,24 +15,24 @@ const TextEditor = ({selectedSession}) => {
     }, [selectedSession]);
 
     const fetchTextFromBackend = async () => {
-        try {
-          const accessToken = localStorage.getItem('accessToken');
-          const response = await axios.get(REACT_APP_API_URL + `fetch-backup/${selectedSession.id}/`, {
-          }, {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            }
-          });
-          console.log(response)
-          if(response.data.content != "") {
-             setEditorText(JSON.parse(response.data.content))
-          } else {
-            setEditorText("")
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+        const response = await axios.get(REACT_APP_API_URL + `fetch-backup/${selectedSession.id}/`, {
+        }, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
           }
-        } catch (error) {
-          console.error('Error fetching editor for session:', error);
-        } 
-      };  
+        });
+        console.log(response)
+        if(response.data.content != "") {
+            setEditorText(JSON.parse(response.data.content))
+        } else {
+          setEditorText("")
+        }
+      } catch (error) {
+        console.error('Error fetching editor for session:', error);
+      } 
+    };  
 
     const handleAddText = () => {
         setEditorText(prevText => prevText + '\n' + newText);

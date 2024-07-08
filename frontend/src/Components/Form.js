@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons';
 import '../Styles/Form.css';
 
 function Form({ onClose, handleUpload, submitForm, inputs, setInputs, }) {
@@ -23,7 +23,9 @@ function Form({ onClose, handleUpload, submitForm, inputs, setInputs, }) {
   return (
     <div className="overlay">
       <div className="overlay-content">
-        <button onClick={onClose} className="close-btn"></button>
+        <button onClick={onClose} className="close-btn">
+          <FontAwesomeIcon size="lg" icon={faXmark} />
+        </button>
         <form style={{marginTop: "20px"}}>
           <div style={{display: "flex", flexDirection: "row"}}>
             <button type="button" onClick={handleAddInput} className="icon-btn">
