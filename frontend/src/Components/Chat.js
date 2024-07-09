@@ -39,16 +39,6 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   }, [selectedSession]);
 
   useEffect(() => {
-    if (chatLog.length > 0) {
-      if (chatLog[chatLog.length - 1].user_role == "assistant" && chatLog[chatLog.length - 1].documents.length == 0) {
-        setShownSourcesIndex(chatLog.length - 1)
-        setDocuments(chatLog[chatLog.length - 1].documents)
-      } else {
-        setShownSourcesIndex(null)
-        setDocuments(null)
-      }
-    }
-
     const chatWindowDiv = document.getElementById("chatWindowDiv");
     if (chatWindowDiv) {
       const height = chatWindowDiv.scrollHeight;
@@ -195,7 +185,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                       className={`show-documents gray rounded-lg ${shownSourcesIndex === index ? 'hide-sources' : ''}`}
                       onClick={() => showDocuments(index)}
                     >
-                      {shownSourcesIndex === index ? 'hide sources' : 'show sources'}
+                      {shownSourcesIndex === index ? 'hide sources' : message.documents.length > 0 ? 'show sources' : "no sources used"}
                     </button>
                     </>
                   }
