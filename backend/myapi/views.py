@@ -53,6 +53,9 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 from urllib.parse import urlparse, urlunparse
+from asgiref.sync import sync_to_async
+import json
+import asyncio
 
 class CreateUserView(APIView):
     permission_classes = [AllowAny]
@@ -660,25 +663,25 @@ class ChatSessionFetchEditorView(APIView):
     
 class DataExtractionView(APIView):
     permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         files = request.FILES.getlist('files')
-        extracted_data = []
+        instruction = request.POST.get('instruction')
 
-        for file in files:
-            file_name = default_storage.save("uploads/data_extraction/" + file.name, ContentFile(file.read()))
-            full_file_path = default_storage.path(file_name)
-            
-            file_content = read_pdf(full_file_path)
-
-            instruction_prompt = "Summarize"
-            data = extract_data_using_chatgpt(llm, file_content, instruction_prompt)
-            extracted_data.append({
-                'file_name': file.name,
-                'data': data
-            })
-
-
-            # Delete the file after processing
-            default_storage.delete(full_file_path)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        tasks = [self.process_file(file, instruction) for file in files]
+        extracted_data = loop.run_until_complete(asyncio.gather(*tasks))
 
         return Response({'content': extracted_data})
+
+    async def process_file(self, file, instruction):
+        file_name = default_storage.save("uploads/data_extraction/" + file.name, ContentFile(file.read()))
+        full_file_path = default_storage.path(file_name)
+
+        file_content = read_pdf(full_file_path)
+        data = await extract_data_using_chatgpt(llm, file_content, instruction)
+
+        default_storage.delete(full_file_path)
+        
+        return {'file_name': file.name, 'data': data}

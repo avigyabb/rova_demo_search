@@ -7,6 +7,7 @@ import os
 from langchain.agents import AgentExecutor, create_openai_tools_agent
 from django.db.models import Q
 from collections import defaultdict
+from asgiref.sync import sync_to_async
 
 prompt = hub.pull("hwchase17/openai-tools-agent")
 
@@ -78,7 +79,7 @@ def draft_from_questions(llm, questions, tools, chat_session, user):
 
   return draft
 
-def extract_data_using_chatgpt(llm, text, instruction):
+async def extract_data_using_chatgpt(llm, text, instruction):
     SYSTEM_PROMPT = """You are an expert data extraction engine. Please extract the requested data from the following text and return the result in the following JSON format: \n
     { \n
         "data": "data extracted from the text" \n
@@ -89,5 +90,4 @@ def extract_data_using_chatgpt(llm, text, instruction):
     """.format(text=text, instruction=instruction)
     messages = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=USER_PROMPT)]
     response = llm.invoke(messages)
-    print(json.loads(response.content))
     return json.loads(response.content)

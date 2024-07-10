@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
 import { REACT_APP_API_URL } from "../consts";
+import '../Styles/DataExtraction.css';
+
 const DataExtraction = () => {
     const [files, setFiles] = useState([]);
+    const [instruction, setInstruction] = useState('');
     const [response, setResponse] = useState(null);
 
     const handleFileChange = (event) => {
         setFiles(event.target.files);
+    };
+
+    const handleInstructionChange = (event) => {
+        setInstruction(event.target.value);
     };
 
     const handleSubmit = async (event) => {
@@ -15,6 +22,8 @@ const DataExtraction = () => {
         for (let i = 0; i < files.length; i++) {
             formData.append('files', files[i]);
         }
+
+        formData.append('instruction', instruction);
 
         try {
             const res = await fetch(REACT_APP_API_URL + 'data-extraction/', {
@@ -34,16 +43,34 @@ const DataExtraction = () => {
     };
 
     return (
-        <div>
-            <h1>File Upload</h1>
-            <form onSubmit={handleSubmit}>
-                <input type="file" multiple onChange={handleFileChange} />
-                <button type="submit">Upload</button>
+        <div className="container">
+            <h1>MapLM -- Your Personal Data Extraction Assistant</h1>
+            <form onSubmit={handleSubmit} className="form-container">
+                <div className="form-group">
+                    <label htmlFor="instruction">Enter Data Extraction Instructions (what to extract) below:</label>
+                    <textarea
+                        id="instruction"
+                        value={instruction}
+                        onChange={handleInstructionChange}
+                        className="instruction-box"
+                    />
+                </div>
+                <div className="form-group upload-group">
+                    <label htmlFor="files">Upload files:</label>
+                    <input type="file" multiple id="files" onChange={handleFileChange} />
+                    <button type="submit" className="upload-button">Submit Files</button>
+                </div>
             </form>
             {response && (
-                <div>
-                    <h2>Response</h2>
-                    <pre>{JSON.stringify(response, null, 2)}</pre>
+                <div className="response-container">
+                    <div className="response-content">
+                        {response.content.map((item, index) => (
+                            <div key={index} className="card">
+                                <h3>{item.file_name}</h3>
+                                <p>Data: {item.data.data}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
