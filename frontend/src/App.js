@@ -5,6 +5,7 @@ import Home from './Components/Home.js'
 import Website from './website/Website.js';
 import Login from './website/Website/Login.js';
 import JoinWaitlist from './website/Website/JoinWaitlist.js';
+import DataExtraction from './Components/DataExtraction.js';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import MiniProjects from './website/Website/MiniProjects.js';
 import { createTheme, ThemeProvider } from '@mui/material';
@@ -31,6 +32,7 @@ function App() {
           <Route path={'/login'} element={<Login />} />
           <Route path={'/join-waitlist'} element={<JoinWaitlist />} />
           <Route path={'/amborasocial'} element={<MiniProjects />} />
+          <Route path={'/data-extraction'} element={<DataExtraction />} />
           <Route path={basePath} element={<Home />} />
         </Routes>
       </Router>

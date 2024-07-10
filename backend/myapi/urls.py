@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (FileUploadView, FileDeleteView, FileEditView, FileListView, LlmModelView, ChatHistoryView, ChatSessionView, ChatSessionCreateView, 
                     ChatSessionDeleteView, ChatSessionRenameView, UrlUploadView, CreateUserView, LoginView, JoinWaitlist, ChatSessionUpdateEditorView, 
-                    ChatSessionFetchEditorView)
+                    ChatSessionFetchEditorView, DataExtractionView)
 
 urlpatterns = [
     path('upload/<int:is_grantapp>/', FileUploadView.as_view(), name='file-upload'),
@@ -19,5 +19,6 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('join-waitlist/', JoinWaitlist.as_view(), name='join-waitlist'),
     path('editor-backup/<int:pk>/', ChatSessionUpdateEditorView.as_view(), name='editor-backup'),
-    path('fetch-backup/<int:pk>/', ChatSessionFetchEditorView.as_view(), name='fetch-backup')
+    path('fetch-backup/<int:pk>/', ChatSessionFetchEditorView.as_view(), name='fetch-backup'),
+    path('data-extraction/', DataExtractionView.as_view(), name='data-extraction')
 ]

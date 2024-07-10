@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 
 import chromadb
 from langchain_openai import OpenAIEmbeddings
-from .chat import respond_to_message, draft_from_questions, format_data, document_handler
+from .chat import respond_to_message, draft_from_questions, format_data, document_handler, extract_data_using_chatgpt
 from .utils import get_openai_embeddings, read_pdf, read_docx, chunk_text, extract_questions, clear_neo4j
 
 from openai import OpenAI
@@ -657,3 +657,28 @@ class ChatSessionFetchEditorView(APIView):
         print("TEST", request.user)
         session = get_object_or_404(ChatSession, pk=pk)
         return Response({'content':session.editor_backup})
+    
+class DataExtractionView(APIView):
+    permission_classes = [AllowAny]
+    def post(self, request, *args, **kwargs):
+        files = request.FILES.getlist('files')
+        extracted_data = []
+
+        for file in files:
+            file_name = default_storage.save("uploads/data_extraction/" + file.name, ContentFile(file.read()))
+            full_file_path = default_storage.path(file_name)
+            
+            file_content = read_pdf(full_file_path)
+
+            instruction_prompt = "Summarize"
+            data = extract_data_using_chatgpt(llm, file_content, instruction_prompt)
+            extracted_data.append({
+                'file_name': file.name,
+                'data': data
+            })
+
+
+            # Delete the file after processing
+            default_storage.delete(full_file_path)
+
+        return Response({'content': extracted_data})

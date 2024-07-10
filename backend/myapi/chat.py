@@ -77,3 +77,17 @@ def draft_from_questions(llm, questions, tools, chat_session, user):
     draft[q['description']] = response
 
   return draft
+
+def extract_data_using_chatgpt(llm, text, instruction):
+    SYSTEM_PROMPT = """You are an expert data extraction engine. Please extract the requested data from the following text and return the result in the following JSON format: \n
+    { \n
+        "data": "data extracted from the text" \n
+    } \n
+    """
+    USER_PROMPT = """
+    Here is the text: {text}. \n Please extract the requested data or obey the following instructions using the provided text. The instruction is: {instruction}. \n 
+    """.format(text=text, instruction=instruction)
+    messages = [SystemMessage(content=SYSTEM_PROMPT), HumanMessage(content=USER_PROMPT)]
+    response = llm.invoke(messages)
+    print(json.loads(response.content))
+    return json.loads(response.content)
