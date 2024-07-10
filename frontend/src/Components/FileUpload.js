@@ -82,40 +82,40 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
 
   const handleUpload = async (event, isGrantApp, fileOrganization) => {
     if(isGrantApp){
-        toggleOverlay();
+      toggleOverlay();
     }
     setIsLoading(true);
     if(!event && isGrantApp) {
-        const formData = new FormData();
-        formData.append('selectedFileIds', JSON.stringify(selectedFileIds));
-        formData.append('questions', JSON.stringify(inputs));
-        formData.append('chat_session', JSON.stringify(selectedSession.id));
-        formData.append('file_organization', fileOrganization);
-        console.log(formData)
-        
-        try {
-          const accessToken = localStorage.getItem('accessToken');
-          const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            }
-          });
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          setPdfUrl(url);
-          setShowPopup(true);
-          console.log(response)
-        } catch (error) {
-            console.error('Error communicating questions files:', error);
-        } finally {
-            setIsLoading(false);
-        }
-        return;
+      const formData = new FormData();
+      formData.append('selectedFileIds', JSON.stringify(selectedFileIds));
+      formData.append('questions', JSON.stringify(inputs));
+      formData.append('chat_session', JSON.stringify(selectedSession.id));
+      formData.append('file_organization', fileOrganization);
+      console.log(formData)
+
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+        const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        });
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+        setShowPopup(true);
+        console.log(response)
+      } catch (error) {
+        console.error('Error communicating questions files:', error);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
     } else {
-        const newFiles = Array.from(event.target.files);
-        for (const file of newFiles) {
+      const newFiles = Array.from(event.target.files);
+      for (const file of newFiles) {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('selectedFileIds', JSON.stringify(selectedFileIds));
@@ -123,34 +123,34 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
         formData.append('chat_session', JSON.stringify(selectedSession.id));
         formData.append('file_organization', fileOrganization);
         try {
-            const accessToken = localStorage.getItem('accessToken');
-            const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                }
-            });
-            if (isGrantApp) {
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                setPdfUrl(url);
-                setShowPopup(true);
-            } else {
-                const result = await response.json();
-                console.log(result);
-                if(!('error' in result)) {
-                    setFiles((prevFiles) => [...prevFiles, result]);
-                    setSelectedFileIds(prevIds => [...prevIds, result.id]); // Auto-select new file
-                }
+          const accessToken = localStorage.getItem('accessToken');
+          const response = await fetch(REACT_APP_API_URL + `upload/${isGrantApp}/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
             }
-            
-            } catch (error) {
-                console.error('Error uploading files:', error);
-            } finally {
-                setIsLoading(false);
+          });
+          if (isGrantApp) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            setPdfUrl(url);
+            setShowPopup(true);
+          } else {
+            const result = await response.json();
+            console.log(result);
+            if(!('error' in result)) {
+              setFiles((prevFiles) => [...prevFiles, result]);
+              setSelectedFileIds(prevIds => [...prevIds, result.id]); // Auto-select new file
             }
+          }
+
+        } catch (error) {
+          console.error('Error uploading files:', error);
+        } finally {
+          setIsLoading(false);
         }
+      }
     }
   };
 
@@ -165,7 +165,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
   const handleTagChange = async (fileId, newOrg) => {
     const formData = new FormData();
     formData.append('file_organization', newOrg);
-        
+
     try {
       const accessToken = localStorage.getItem('accessToken');
       const response = await fetch(`${REACT_APP_API_URL}edit/${fileId}/`, {
@@ -187,47 +187,47 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
       setFocusedFileOrganization(null);
     }
   }
-  
+
   return (
-      <div style={{ 
-        width: '300px', 
-        backgroundColor: '#f0f0f0', 
-        padding: '15px', 
-        overflowY: 'auto',
-      }}>
-        <div style = {{display : "flex", flexDirection : "column", height : "100%" }}>
-          <label className="add-file-btn" onClick={() => setShowUploadPopup(true)}>
-            <FaPlus style={{ marginRight: '8px' }}/>
-            Upload Files
-          </label>
+    <div style={{
+      width: '300px',
+      backgroundColor: '#f0f0f0',
+      padding: '15px',
+      overflowY: 'auto',
+    }}>
+      <div style = {{display : "flex", flexDirection : "column", height : "100%" }}>
+        <label className="add-file-btn" onClick={() => setShowUploadPopup(true)}>
+        <FaPlus style={{ marginRight: '8px' }}/>
+          Upload Files
+        </label>
         <div style={{ marginTop: '10px', flexGrow : 1, overflowY : "auto" }}>
           {files.length === 0 ? (
             <p style={{ marginTop: '10px', color: 'gray' }}>No files uploaded yet.</p>
           ) : (
             <ul style={{ paddingLeft: '0px', marginTop: '10px' }}>
               {files.map((file) => (
-                <li 
-                  key={file.id} 
+                <li
+                  key={file.id}
                   onMouseEnter={() => setFocusedFile(file.id)}
                   onMouseLeave={() => setFocusedFile(null)}
-                  style={{ 
+                  style={{
                     backgroundColor: focusedFile === file.id && 'lightgray',
-                    padding: '10px', 
-                    borderRadius: '5px', 
-                    marginBottom: '5px' 
+                    padding: '10px',
+                    borderRadius: '5px',
+                    marginBottom: '5px'
                   }}
                 >
                   {focusedFileOrganization !== file.id && (
                     <div style={{ display: 'flex' }}>
-                      <p style={{ 
-                        backgroundColor: organizationColors[file.file_organization], 
-                        color: 'white', 
-                        padding: '3px', 
-                        paddingRight: '10px', 
-                        paddingLeft: '10px', 
-                        borderRadius: '30px', 
-                        fontSize: '10px', 
-                        marginBottom: '2px', 
+                      <p style={{
+                        backgroundColor: organizationColors[file.file_organization],
+                        color: 'white',
+                        padding: '3px',
+                        paddingRight: '10px',
+                        paddingLeft: '10px',
+                        borderRadius: '30px',
+                        fontSize: '10px',
+                        marginBottom: '2px',
                         marginLeft: '20px'
                       }}>
                         {focusedFile === file.id ? file.file_organization : ''}
@@ -241,19 +241,20 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
                       onChange={() => toggleFileSelection(file.id)}
                       style={{ marginRight: '10px', transform: 'scale(1.3)' }}
                     />
-                    <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>{file.filename}</span>
-                    {focusedFile === file.id && (
-                      <>
-                      <FaTags
-                        size={22}
-                        className='tags-btn'
-                        onClick={() => setFocusedFileOrganization(focusedFileOrganization === file.id ? null : file.id)}
-                      />
-                      <FaTrash 
-                        size={20}
-                        className='delete-btn'
-                        onClick={() => handleDelete(file.id)} 
-                      />
+                    {focusedFile !== file.id && (<span title={file.filename} style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>{file.filename}</span>)}
+                    {focusedFile === file.id && ( 
+                    <>
+                      <span title={file.filename} style={{ flex: 1, overflow: 'hidden', textOverflow: 'wrap', whiteSpace: 'normal', fontSize: '14px' }}>{file.filename}</span>
+                        <FaTags
+                          size={22}
+                          className='tags-btn'
+                          onClick={() => setFocusedFileOrganization(focusedFileOrganization === file.id ? null : file.id)}
+                        />
+                        <FaTrash
+                          size={20}
+                          className='delete-btn'
+                          onClick={() => handleDelete(file.id)}
+                        />
                       </>
                     )}
                   </div>
@@ -271,41 +272,41 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
               ))}
             </ul>
           )}
-          </div>
+        </div>
 
         <div style={{ position : "sticky", bottom: '0', width: '100%', margin: '20px' }}>
-        <label className="custom-file-input">
+          <label className="custom-file-input">
             {isLoading ? (
                 <div style={{color: 'white'}}>
                 <CircularProgress color="inherit"/>
-                </div>
+              </div>
             ) : (
-                <div style={{ zIndex: 1000 }}>
+              <div style={{ zIndex: 1000 }}>
                 <button onClick={toggleOverlay}>Draft Grant</button>
-                </div>
+              </div>
             )}
             <input
-                type="file"
-                multiple
-                onChange={(event) => handleUpload(event, 1, 'template')}
-                style={{ display: 'none' }}
+              type="file"
+              multiple
+              onChange={(event) => handleUpload(event, 1, 'template')}
+              style={{ display: 'none' }}
             />
-        </label>
-    </div>
+          </label>
+        </div>
 
-    </div>
+      </div>
 
-    {showOverlay && (
-      <Form
-        onClose={toggleOverlay}
-        handleUpload={handleUpload}
-        submitForm={submitForm}
-        inputs={inputs}
-        setInputs={setInputs}
-      />
-    )}
+      {showOverlay && (
+        <Form
+          onClose={toggleOverlay}
+          handleUpload={handleUpload}
+          submitForm={submitForm}
+          inputs={inputs}
+          setInputs={setInputs}
+        />
+      )}
 
-    {showPopup && (
+      {showPopup && (
         <div style={{
           position: 'fixed',
           top: '47.5%',
