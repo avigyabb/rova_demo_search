@@ -21,6 +21,8 @@ function Home() {
   const [chatLog, setChatLog] = useState([]);
   const [isSidebarOpen, setSidebarOpen] = useState(sessionStorage.getItem('isSidebarOpen') ? JSON.parse(sessionStorage.getItem('isSidebarOpen')) : true);
   const [isEditorOpen, setEditorOpen] = useState(true); // State to control TextEditor visibility
+  const [showPopup, setShowPopup] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState(null);
 
   // Use local state if props are not provided
   const [selectedSession, setSelectedSession] = useState(sessionStorage.getItem('selectedSession') ? JSON.parse(sessionStorage.getItem('selectedSession')) : null);
@@ -62,8 +64,46 @@ function Home() {
     setEditorOpen(prev => !prev); // Toggle editor visibility
   };
 
+  const handleClosePopup = () => {
+    setShowPopup(false);
+    window.location.reload();
+  };
+
   return (
     <div className="main-container" style={{ display: "flex", flexDirection: "column", height: '100vh', width: "100%"}}>
+
+      {showPopup && (
+        <div style={{
+          position: 'fixed',
+          top: '47.5%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: '80%',
+          height: '90%',
+          backgroundColor: 'white',
+          overflow: 'scroll',
+          zIndex: 1001,
+          boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+          padding: '37px',
+          boxSizing: 'border-box'
+        }}>
+          <iframe
+            src={pdfUrl}
+            style={{ width: '100%', height: '100%'}}
+            frameBorder="0"
+          />
+          <button
+            onClick={() => handleClosePopup()}
+            style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1001}}
+          >
+            Close
+          </button>
+          <a href={pdfUrl} download="grant_application.pdf" style={{ position: 'absolute', bottom: '10px', right: '10px', zIndex: 1001}}>
+            Download PDF
+          </a>
+        </div>
+      )}
+
       <div style={{ width: "100%", position: "relative", zIndex: 11 }}>
         <Sessions selectedSession={selectedSession} setSelectedSession={setSelectedSession} fetchChat={fetchChat} />
         <div style={{ position: "absolute", right: "140px", top: "15px" }}>
@@ -80,7 +120,7 @@ function Home() {
         <ArrowButton onClick={setSidebarOpen} isSidebarOpen={isSidebarOpen} />
         { isSidebarOpen && 
         <div style={{ width: "300px", display: "flex", position: 'relative', zIndex: 10 }}>
-          <FileUploadComponent selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} />
+          <FileUploadComponent selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} setShowPopup={setShowPopup} setPdfUrl={setPdfUrl}/>
           {/* <Form
             onClose={() => {}}
             handleUpload={() => {}}

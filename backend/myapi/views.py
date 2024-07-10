@@ -587,19 +587,19 @@ class UrlUploadView(APIView):
             documents.append({"id": doc_id, "source_id": uploaded_file.id, "user_id": request.user.id, "content": chunk.page_content})
             jdx += 1
 
-        # for link in links:
-        #     try:
-        #         response = requests.get(link)
-        #         response.raise_for_status()
-        #     except requests.exceptions.RequestException as e:
-        #         continue
-        #     soup = BeautifulSoup(response.content, 'html.parser')
-        #     text = soup.get_text(separator=' ', strip=True)
-        #     chunks = chunk_text(text)
-        #     for chunk in chunks:
-        #         doc_id = f"{uploaded_file.id}_{jdx}"
-        #         documents.append({"id": doc_id, "source_id": uploaded_file.id, "user_id": request.user.id, "content": chunk.page_content})
-        #         jdx += 1
+        for link in links:
+            try:
+                response = requests.get(link)
+                response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                continue
+            soup = BeautifulSoup(response.content, 'html.parser')
+            text = soup.get_text(separator=' ', strip=True)
+            chunks = chunk_text(text)
+            for chunk in chunks:
+                doc_id = f"{uploaded_file.id}_{jdx}"
+                documents.append({"id": doc_id, "source_id": uploaded_file.id, "user_id": request.user.id, "content": chunk.page_content})
+                jdx += 1
         
         chroma_manager.store_document_in_chromadb(documents)
 
