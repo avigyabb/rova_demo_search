@@ -43,7 +43,7 @@ const DataExtraction = () => {
     };
 
     return (
-        <div className="container">
+        <div className="container_data_extraction">
             <h1>MapLM -- Your Personal Data Extraction Assistant</h1>
             <form onSubmit={handleSubmit} className="form-container">
                 <div className="form-group">
