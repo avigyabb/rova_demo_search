@@ -106,6 +106,9 @@ function Home() {
 
       <div style={{ width: "100%", position: "relative", zIndex: 11 }}>
         <Sessions selectedSession={selectedSession} setSelectedSession={setSelectedSession} fetchChat={fetchChat} />
+        <div style={{ position: "absolute", right: "240px", top: "15px" }}>
+          <a className="toggle-button" href="/data-extraction">Extract Data</a>
+        </div>
         <div style={{ position: "absolute", right: "140px", top: "15px" }}>
           <button onClick={toggleEditor} className="toggle-button">
             {isEditorOpen ? 'Close Editor' : 'Open Editor'}

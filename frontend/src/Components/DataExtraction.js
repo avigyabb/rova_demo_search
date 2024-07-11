@@ -44,7 +44,7 @@ const DataExtraction = () => {
 
     return (
         <div className="container">
-            <h1 className='heading-properties'>MapLM -- Your Personal Data Extraction Assistant</h1>
+            <h1 className='heading-properties'>Jetty -- Your Personal Data Extraction Assistant</h1>
             <form onSubmit={handleSubmit} className="form-container">
                 <div className="form-group">
                     <label className='label-box' htmlFor="instruction">Enter Data Extraction Instructions (what to extract) below:</label>
