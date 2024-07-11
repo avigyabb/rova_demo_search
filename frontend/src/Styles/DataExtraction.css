@@ -1,5 +1,5 @@
 /* DataExtraction.css */
-.container_data_extraction {
+.container {
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
@@ -7,11 +7,11 @@
     border-radius: 10px;
 }
 
-.container_data_extraction h1, h2 {
+.heading-properties {
     text-align: center;
 }
 
-.container_data_extraction .form-container {
+.form-container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -19,23 +19,23 @@
     border-radius: 10px;
 }
 
-.container_data_extraction .form-group {
+.form-group {
     width: 100%;
     margin-bottom: 15px;
 }
 
-.container_data_extraction .upload-group {
+.upload-group {
     display: flex;
     align-items: center;
 }
 
-.container_data_extraction .label {
+.label-box {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
 }
 
-.container_data_extraction .textarea {
+.instruction-box {
     width: 100%;
     padding: 8px;
     margin-bottom: 10px;
@@ -44,12 +44,12 @@
     border-radius: 10px;
 }
 
-.container_data_extraction .input[type="file"] {
+.input[type="file"] {
     flex-grow: 1;
     margin-right: 10px;
 }
 
-.container_data_extraction .upload-button {
+.upload-button {
     padding: 10px 20px;
     background-color: #edfae8;
     color: black;
@@ -62,11 +62,11 @@
     transition: 0.5s;
 }
 
-.container_data_extraction .upload-button:hover {
+.upload-button:hover {
     background-color: #d4ded1;
 }
 
-.container_data_extraction .response-container {
+.response-container {
     margin-top: 20px;
     border: 1px solid lightblue;
     background-color: #e6f7ff;
@@ -76,14 +76,14 @@
     border-radius: 10px;
 }
 
-.container_data_extraction .response-content {
+.response-content {
     display: flex;
     flex-direction: column;
     align-items: center;
     border-radius: 10px;
 }
 
-.container_data_extraction .card {
+.card {
     background-color: #f9f9f9;
     border: 1px solid #ddd;
     border-radius: 5px;
@@ -94,14 +94,14 @@
     border-radius: 10px;
 }
 
-.container_data_extraction .card h3 {
+.card h3 {
     margin: 0 0 10px 0;
     font-size: 18px;
     border-bottom: 1px solid #ddd;
     padding-bottom: 10px;
 }
 
-.container_data_extraction .card p {
+.card p {
     margin: 0;
     font-size: 16px;
 }

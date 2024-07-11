@@ -43,11 +43,11 @@ const DataExtraction = () => {
     };
 
     return (
-        <div className="container_data_extraction">
-            <h1>MapLM -- Your Personal Data Extraction Assistant</h1>
+        <div className="container">
+            <h1 className='heading-properties'>MapLM -- Your Personal Data Extraction Assistant</h1>
             <form onSubmit={handleSubmit} className="form-container">
                 <div className="form-group">
-                    <label htmlFor="instruction">Enter Data Extraction Instructions (what to extract) below:</label>
+                    <label className='label-box' htmlFor="instruction">Enter Data Extraction Instructions (what to extract) below:</label>
                     <textarea
                         id="instruction"
                         value={instruction}
