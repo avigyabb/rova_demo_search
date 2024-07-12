@@ -13,6 +13,8 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   const [inputRows, setInputRows] = useState(1);
   const [inputAreaWidth, setInputAreaWidth] = useState(0);
   const [shownSourcesIndex, setShownSourcesIndex] = useState(null);
+  const [context, setContext] = useState(false);
+  const [contextValue, setContextValue] = useState("")
 
   const fetchChat = async () => {
     try {
@@ -79,7 +81,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
     const updateWidth = () => {
       const inputArea = document.getElementById("inputArea");
       if (inputArea) {
-        setInputAreaWidth(inputArea.offsetWidth - 100 - 16);
+        setInputAreaWidth(inputArea.offsetWidth - 100 - 40 - 16);
       }
     };
 
@@ -126,6 +128,10 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
     setInputValue(event.target.value);
   };
 
+  const handleContextTyping = (event) => {
+    setContextValue(event.target.value)
+  };
+
   const showDocuments = (index) => {
     if (shownSourcesIndex === index) {
       setShownSourcesIndex(null);
@@ -151,6 +157,11 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
       textarea.removeEventListener('keydown', handleKeyDown);
     };
   }, [inputValue]);
+
+  const contextChange = (event) => {
+    event.preventDefault();
+    setContext(!context)
+  }
 
   return (
     <div className="container mx-auto chat-container">
@@ -234,34 +245,68 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
             )}
           </div>
         </div>
-        <form onSubmit={handleSubmit} className="flex-none p-6 pt-0">
-          <div style={{ position: "relative" }}>
-            <div className="flex border" style={{ alignItems: "center", borderRadius: "20px"}}>
-              <textarea
-                id="inputArea"
-                type="text"
-                className="flex-grow px-4 py-2 focus:outline-none"
-                disabled={isLoading}
-                style={{ fontFamily: "'Cerebri Sans', sans-serif", borderRadius: "20px", paddingRight: "100px", backgroundColor: '#f0f0f0' }}
-                rows={inputRows}
-                placeholder="Ask a question..."
-                value={inputValue}
-                onChange={handleTyping}
-              />
-              <button
-                type="submit"
-                className="flex absolute right-1 m-auto px-3 py-1 font-semibold focus:outline-none transition-colors duration-300"
-                style={{ alignItems: "center", color: 'white', borderRadius: "20px", backgroundColor: "black" }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = "gray"}
-                onMouseLeave={(e) => e.target.style.backgroundColor = "black"}
-                disabled={isLoading}
-              >
-                Send
-                <FaPaperPlane size={14} style={{ marginLeft: "8px" }} />
-              </button>
+          <form className="flex-none p-6 pt-0">
+            <div style={{ position: "relative" }}>
+              <div className="flex border" style={{ alignItems: "center", borderRadius: "20px"}}>
+                <button
+                  className = "flex absolute left-1 blue w-8 h-8 rounded-full"
+                  style = {{alignItems : "center", justifyContent : "center"}}
+                  onClick = {contextChange}
+                  >
+                    {context ? "\\/" : "/\\"}
+                </button>
+                {context ?
+                <div className = "flex flex-col flex-grow">
+                  <textarea
+                    id = "inputArea"
+                    type = "text"
+                    className = "flex-grow px-4 py-2 focus:outline-none"
+                    disabled = {isLoading}
+                    style = {{borderBottom : "1px solid", fontFamily : "'Cerebri Sans', sans-serif", paddingLeft : "40px", paddingRight : "100px", backgroundColor : "#f0f0f0"}}
+                    rows = {1}
+                    placeholder = "Add context here..."
+                    value = {contextValue}
+                    onChange = {handleContextTyping}
+                  />
+                  <textarea
+                    id="inputArea"
+                    type="text"
+                    className="flex-grow px-4 py-2 focus:outline-none"
+                    disabled={isLoading}
+                    style={{ fontFamily: "'Cerebri Sans', sans-serif", paddingLeft : "40px", paddingRight: "100px", backgroundColor: '#f0f0f0' }}
+                    rows={inputRows}
+                    placeholder="Add questions here..."
+                    value={inputValue}
+                    onChange={handleTyping}
+                  />
+                </div> :
+                <textarea
+                  id = "inputArea"
+                  type = "text"
+                  className = "flex-grow px-4 py-2 focus:outline-none"
+                  disabled = {isLoading}
+                  style = {{fontFamily : "'Cerebri Sans', sans-serif", borderRadius : "20px", paddingLeft : "40px", paddingRight : "100px", backgroundColor : "#f0f0f0"}}
+                  rows = {inputRows}
+                  placeholder = "Ask a question..."
+                  value = {inputValue}
+                  onChange = {handleTyping}
+                />
+                }                
+                <button
+                  type="submit"
+                  className="flex absolute right-1 m-auto px-3 py-1 font-semibold focus:outline-none transition-colors duration-300"
+                  style={{ alignItems: "center", color: 'white', borderRadius: "20px", backgroundColor: "black" }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = "gray"}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = "black"}
+                  disabled={isLoading}
+                  onClick = {handleSubmit}
+                >
+                  Send
+                  <FaPaperPlane size={14} style={{ marginLeft: "8px" }} />
+                </button>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
       </div>
     </div>
   );
