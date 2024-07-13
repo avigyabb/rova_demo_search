@@ -11,6 +11,7 @@ import TextEditor from './TextEditor.js';
 import Form from './Form.js';
 import "../Styles/Home.css";
 import { useNavigate } from 'react-router-dom';
+import {REACT_APP_API_URL} from "../consts";
 
 function Home() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ function Home() {
   const [documents, setDocuments] = useState(null);
   const [chatLog, setChatLog] = useState([]);
   const [isSidebarOpen, setSidebarOpen] = useState(sessionStorage.getItem('isSidebarOpen') ? JSON.parse(sessionStorage.getItem('isSidebarOpen')) : true);
-  const [isEditorOpen, setEditorOpen] = useState(true); // State to control TextEditor visibility
+  const [isEditorOpen, setEditorOpen] = useState(false); // State to control TextEditor visibility
   const [showPopup, setShowPopup] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
 
@@ -68,6 +69,34 @@ function Home() {
     setShowPopup(false);
     window.location.reload();
   };
+
+  const answerTemplateQuestions = async(event) => {
+    const newFiles = Array.from(event.target.files)
+    for (const file of newFiles) {
+      const formData = new FormData();
+      formData.append('file', file)
+      formData.append('selectedFileIds', JSON.stringify(selectedFileIds))
+      formData.append('questions', JSON.stringify(['']))
+      formData.append('chat_session', JSON.stringify(selectedSession.id))
+      formData.append('file_organization', undefined)
+      try {
+        const accessToken = localStorage.getItem('accessToken');
+        const response = await fetch(REACT_APP_API_URL + `upload/1/`, {
+          method : 'POST',
+          body : formData,
+          headers : {
+            Authorization : `Bearer ${accessToken}`
+          }
+        });
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+        setShowPopup(true);
+      } catch (error) {
+        console.error('Error uploading files:', error)
+      }
+    }
+  }
 
   return (
     <div className="main-container" style={{ display: "flex", flexDirection: "column", height: '100vh', width: "100%"}}>
@@ -134,7 +163,7 @@ function Home() {
         </div>
         }
         <div style={{flexGrow : 1, overflowX : "auto", backgroundColor: "rgba(255,255,255,255)", position: "relative", zIndex: 1 }}>
-          <Chat ref={chatRef} selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} setDocuments = {setDocuments} chatLog = {chatLog} setChatLog = {setChatLog} />
+          <Chat ref={chatRef} selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} setDocuments = {setDocuments} chatLog = {chatLog} setChatLog = {setChatLog} answerTemplateQuestions = {answerTemplateQuestions} />
         </div>
         {documents && (
         <div style = {{width : "300px", display : "flex", position : "relative", zIndex : 2}}>

@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-export default function Chat({ selectedSession, selectedFileIds, setSelectedFileIds, setDocuments, chatLog, setChatLog }) {
+export default function Chat({ selectedSession, selectedFileIds, setSelectedFileIds, setDocuments, chatLog, setChatLog, answerTemplateQuestions}) {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [inputRows, setInputRows] = useState(1);
@@ -57,15 +57,18 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
         const userChat = { user_role: "user", message: inputValue };
         setChatLog((prevChatLog) => [...prevChatLog, userChat]);
         setIsLoading(true);
-        await axios.post(REACT_APP_API_URL + "send-message/", {
-          body: inputValue,
-          session_id: selectedSession.id,
-          file_ids: JSON.stringify(selectedFileIds)
-        }, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          }
-        });
+        if (!context) {
+          await axios.post(REACT_APP_API_URL + "send-message/", {
+            body: inputValue,
+            session_id: selectedSession.id,
+            file_ids: JSON.stringify(selectedFileIds)
+          }, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            }
+          });
+        } else {
+        }
         fetchChat(selectedSession.id)
         setIsLoading(false)
       } catch (error) {
@@ -75,13 +78,14 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
     };
     sendMessage();
     setInputValue("");
+    setContextValue("");
   };
 
   useEffect(() => {
     const updateWidth = () => {
       const inputArea = document.getElementById("inputArea");
       if (inputArea) {
-        setInputAreaWidth(inputArea.offsetWidth - 100 - 40 - 16);
+        setInputAreaWidth(inputArea.offsetWidth - 100 - 40 - 16)
       }
     };
 
@@ -161,6 +165,16 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   const contextChange = (event) => {
     event.preventDefault();
     setContext(!context)
+  }
+
+  const handleTemplateUpload = (event) => {
+    event.preventDefault()
+    setIsLoading(true)
+    answerTemplateQuestions(event).finally (() => {
+      setIsLoading(false)
+      setInputValue("")
+      setContextValue("")
+    })
   }
 
   return (
@@ -250,7 +264,8 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
               <div className="flex border" style={{ alignItems: "center", borderRadius: "20px"}}>
                 <button
                   className = "flex absolute left-1 blue w-8 h-8 rounded-full"
-                  style = {{alignItems : "center", justifyContent : "center"}}
+                  style = {{alignItems : "center", justifyContent : "center", zIndex : 10}}
+                  disabled = {isLoading}
                   onClick = {contextChange}
                   >
                     {context ? "\\/" : "/\\"}
@@ -268,17 +283,31 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                     value = {contextValue}
                     onChange = {handleContextTyping}
                   />
-                  <textarea
-                    id="inputArea"
-                    type="text"
-                    className="flex-grow px-4 py-2 focus:outline-none"
-                    disabled={isLoading}
-                    style={{ fontFamily: "'Cerebri Sans', sans-serif", paddingLeft : "40px", paddingRight: "100px", backgroundColor: '#f0f0f0' }}
-                    rows={inputRows}
-                    placeholder="Add questions here..."
-                    value={inputValue}
-                    onChange={handleTyping}
-                  />
+                  <div className = "flex flex-row relative items-center">
+                    <textarea
+                      id="inputArea"
+                      type="text"
+                      className="flex-grow px-4 py-2 focus:outline-none"
+                      disabled={isLoading}
+                      style={{ fontFamily: "'Cerebri Sans', sans-serif", paddingLeft : "40px", paddingRight : "100px", backgroundColor: '#f0f0f0' }}
+                      rows={inputRows}
+                      placeholder="Add questions here..."
+                      value={inputValue}
+                      onChange={handleTyping}
+                    />
+                    {inputValue.length == 0 && (
+                    <label className = "absolute right-[100px]">
+                      Or Upload Template
+                      <input
+                        type="file"
+                        multiple
+                        onChange = {handleTemplateUpload}
+                        style = {{display : "none"}}
+                      >
+                      </input>
+                    </label>
+                    )}
+                  </div>
                 </div> :
                 <textarea
                   id = "inputArea"
