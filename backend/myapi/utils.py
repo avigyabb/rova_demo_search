@@ -55,16 +55,19 @@ def chunk_text(sample):
     texts = custom_text_splitter.create_documents([sample])
     return texts
 
-def extract_questions(client, file_path, provided_questions):
-
-    if(not file_path):
-        out = [{"description":q, "word_limit":None, "page_limit":None} for q in provided_questions]
-        return {'questions': out}
+def extract_questions(client, file_path, context, provided_questions):
+    #if(not file_path):
+        #out = [{"description":q, "word_limit":None, "page_limit":None} for q in provided_questions]
+        #return {'questions': out}
+    if file_path:
+        if(file_path.endswith('.pdf')):
+            text = extract_text_from_pdf(file_path)
+        elif(file_path.endswith('.docx')):
+            text = read_docx(file_path)
+    else:
+        text = provided_questions
     
-    if(file_path.endswith('.pdf')):
-        text = extract_text_from_pdf(file_path)
-    elif(file_path.endswith('.docx')):
-        text = read_docx(file_path)
+    provided_questions = []
 
     # Make a completion request referencing the uploaded file
     extraction_prompt = """ Given the following PDF text, \n 
@@ -95,5 +98,8 @@ def extract_questions(client, file_path, provided_questions):
     )
     questions = json.loads(completion.choices[0].message.content)
     questions['questions'] = [{"description":q, "word_limit":None, "page_limit":None} for q in provided_questions if len(q) > 5] + questions['questions'] # just to make sure lone characters don't sneak in there
+    if len(context) > 0:
+        for question in questions["questions"]:
+            question["description"] = context + " " + question["description"]
     print("QUESTIONS: ", questions)
     return questions

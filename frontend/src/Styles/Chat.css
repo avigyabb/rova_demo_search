@@ -85,4 +85,11 @@
   }
 }
 
+.upload-template {
+  cursor : pointer;
+  padding: 5px 10px;
+}
 
+.upload-template:hover {
+  background-color : lightgray;
+}

@@ -70,30 +70,53 @@ function Home() {
     window.location.reload();
   };
 
-  const answerTemplateQuestions = async(event) => {
-    const newFiles = Array.from(event.target.files)
-    for (const file of newFiles) {
-      const formData = new FormData();
-      formData.append('file', file)
-      formData.append('selectedFileIds', JSON.stringify(selectedFileIds))
-      formData.append('questions', JSON.stringify(['']))
-      formData.append('chat_session', JSON.stringify(selectedSession.id))
-      formData.append('file_organization', undefined)
+  const answerMultipleQuestions = async(event, isTemplateUpload, context, questions, fileOrganization) => {
+    if (isTemplateUpload) {
+      const newFiles = Array.from(event.target.files)
+      for (const file of newFiles) {
+        const formData = new FormData();
+        formData.append("file", file)
+        formData.append("selectedFileIds", JSON.stringify(selectedFileIds))
+        formData.append("context", context)
+        formData.append("questions", questions)
+        formData.append("chat_session", JSON.stringify(selectedSession.id))
+        formData.append("file_organization", fileOrganization)
+        try {
+          const accessToken = localStorage.getItem("accessToken");
+          const response = await fetch(REACT_APP_API_URL + "upload/1/", {
+            method : "POST",
+            body : formData,
+            headers : {
+              Authorization : `Bearer ${accessToken}`
+            }
+          });
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url);
+          setShowPopup(true);
+        } catch (error) {
+          console.error("Error uploading files:", error)
+        }
+      }
+    } else {
+      const formData = new FormData()
+      formData.append("selectedFileIds", JSON.stringify(selectedFileIds))
+      formData.append("context", context)
+      formData.append("questions", questions)
+      formData.append("chat_session", JSON.stringify(selectedSession.id))
+      formData.append("file_organization", fileOrganization)
       try {
-        const accessToken = localStorage.getItem('accessToken');
-        const response = await fetch(REACT_APP_API_URL + `upload/1/`, {
-          method : 'POST',
+        const accessToken = localStorage.getItem("accessToken")
+        const response = await fetch(REACT_APP_API_URL + "upload/1/", {
+          method : "POST",
           body : formData,
           headers : {
             Authorization : `Bearer ${accessToken}`
           }
-        });
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        setPdfUrl(url);
-        setShowPopup(true);
+        })
+        const blob = await response.blob()
       } catch (error) {
-        console.error('Error uploading files:', error)
+        console.error("Error", error)
       }
     }
   }
@@ -163,7 +186,7 @@ function Home() {
         </div>
         }
         <div style={{flexGrow : 1, overflowX : "auto", backgroundColor: "rgba(255,255,255,255)", position: "relative", zIndex: 1 }}>
-          <Chat ref={chatRef} selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} setDocuments = {setDocuments} chatLog = {chatLog} setChatLog = {setChatLog} answerTemplateQuestions = {answerTemplateQuestions} />
+          <Chat ref={chatRef} selectedSession={selectedSession} selectedFileIds={selectedFileIds} setSelectedFileIds={setSelectedFileIds} setDocuments = {setDocuments} chatLog = {chatLog} setChatLog = {setChatLog} answerMultipleQuestions = {answerMultipleQuestions} />
         </div>
         {documents && (
         <div style = {{width : "300px", display : "flex", position : "relative", zIndex : 2}}>

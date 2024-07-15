@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { materialDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-export default function Chat({ selectedSession, selectedFileIds, setSelectedFileIds, setDocuments, chatLog, setChatLog, answerTemplateQuestions}) {
+export default function Chat({ selectedSession, selectedFileIds, setSelectedFileIds, setDocuments, chatLog, setChatLog, answerMultipleQuestions}) {
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [inputRows, setInputRows] = useState(1);
@@ -54,10 +54,10 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
     event.preventDefault();
     const sendMessage = async () => {
       try {
-        const userChat = { user_role: "user", message: inputValue };
-        setChatLog((prevChatLog) => [...prevChatLog, userChat]);
         setIsLoading(true);
         if (!context) {
+          const userChat = { user_role: "user", message: inputValue };
+          setChatLog((prevChatLog) => [...prevChatLog, userChat]);
           await axios.post(REACT_APP_API_URL + "send-message/", {
             body: inputValue,
             session_id: selectedSession.id,
@@ -68,6 +68,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
             }
           });
         } else {
+          await answerMultipleQuestions(null, false, contextValue, inputValue, "template")
         }
         fetchChat(selectedSession.id)
         setIsLoading(false)
@@ -133,7 +134,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   };
 
   const handleContextTyping = (event) => {
-    setContextValue(event.target.value)
+    setContextValue(event.target.value);
   };
 
   const showDocuments = (index) => {
@@ -165,12 +166,13 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   const contextChange = (event) => {
     event.preventDefault();
     setContext(!context)
+    setContextValue("")
   }
 
   const handleTemplateUpload = (event) => {
     event.preventDefault()
     setIsLoading(true)
-    answerTemplateQuestions(event).finally (() => {
+    answerMultipleQuestions(event, true, contextValue, "", undefined).finally (() => {
       setIsLoading(false)
       setInputValue("")
       setContextValue("")
@@ -296,8 +298,8 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
                       onChange={handleTyping}
                     />
                     {inputValue.length == 0 && (
-                    <label className = "absolute right-[100px]">
-                      Or Upload Template
+                    <label className = "upload-template absolute right-[100px]">
+                      + Upload Template
                       <input
                         type="file"
                         multiple

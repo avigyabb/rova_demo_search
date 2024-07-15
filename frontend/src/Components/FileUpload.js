@@ -274,15 +274,15 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
 
         <div style={{ position : "sticky", bottom: '0', width: '100%', margin: '20px' }}>
           <label className="custom-file-input">
-            {isLoading ? (
-                <div style={{color: 'white'}}>
+            {isLoading && (
+                <div /* style={{color: 'white'}} */ >
                 <CircularProgress color="inherit"/>
               </div>
-            ) : (
+            ) /* : (
               <div style={{ zIndex: 1000 }}>
                 <button onClick={toggleOverlay}>Draft Grant</button>
               </div>
-            )}
+            ) */ }
             <input
               type="file"
               multiple

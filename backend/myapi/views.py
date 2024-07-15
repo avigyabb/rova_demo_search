@@ -344,7 +344,9 @@ class FileUploadView(APIView):
             file = None
         selectedFileIds = json.loads(request.POST.get('selectedFileIds'))
         selectedFileIds = [i for i in selectedFileIds if i is not None]
-        provided_questions = json.loads(request.POST.get('questions'))
+        context = request.POST.get("context")
+        provided_questions = request.POST.get("questions")
+        #provided_questions = json.loads(request.POST.get('questions'))
         chat_session_id = int(request.POST.get('chat_session'))
         chat_session = ChatSession.objects.filter(user = request.user).get(id=chat_session_id)
         if(file is not None):
@@ -366,7 +368,7 @@ class FileUploadView(APIView):
                 serializer = UploadedFileSerializer(uploaded_file)
 
                 if is_grantapp:
-                    questions = extract_questions(client, full_file_path, provided_questions)
+                    questions = extract_questions(client, full_file_path, context, provided_questions)
                     draft = draft_from_questions(llm, questions, tools.update(selectedFileIds, request.user.id), chat_session, request.user)
                     
                     # Create the PDF
@@ -397,7 +399,7 @@ class FileUploadView(APIView):
                 print("File already exists, ignoring...")
                 return Response({"error": "File already exists"}, status=status.HTTP_200_OK)
         else:
-            questions = extract_questions(client, None, provided_questions)
+            questions = extract_questions(client, None, context, provided_questions)
             draft = draft_from_questions(llm, questions, tools.update(selectedFileIds, request.user.id), chat_session, request.user)
 
             # Create the PDF

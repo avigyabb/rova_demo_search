@@ -1,10 +1,10 @@
 .custom-file-input {
-  background-color: lightblue;  
+  /* background-color: lightblue; */
   color: black;
   padding: 10px 20px;
   margin: 10px;
   width: 200px;
-  cursor: pointer;
+  /* cursor: pointer; */
   border-radius: 5px;
   display: inline-block;
   text-align: center;
@@ -12,9 +12,11 @@
   transition: 0.3s;
 }
   
+/*
 .custom-file-input:hover {
   background-color: rgb(148, 182, 193);
 }
+*/
 
 /* FileUpload.css */
 .session-button {
