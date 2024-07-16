@@ -172,11 +172,12 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   const handleTemplateUpload = (event) => {
     event.preventDefault()
     setIsLoading(true)
-    answerMultipleQuestions(event, true, contextValue, "", undefined).finally (() => {
+    const contextForTemplate = contextValue
+    answerMultipleQuestions(event, true, contextForTemplate, "", undefined).finally (() => {
       setIsLoading(false)
       setInputValue("")
-      setContextValue("")
     })
+    setContextValue("")
   }
 
   return (
