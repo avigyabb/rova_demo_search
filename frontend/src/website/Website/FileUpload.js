@@ -45,9 +45,9 @@ const FileUpload = () => {
         <Typography variant="h3" gutterBottom style={{ color: 'black' }}>
             Join The Waitlist
         </Typography>
-        <Typography className='text-sm' style={{ color: 'gray', marginBottom: '5%' }}> 
+        {/* <Typography className='text-sm' style={{ color: 'gray', marginBottom: '5%' }}> 
           The AI-Powered Document Management System, for Community Foundations.
-        </Typography>
+        </Typography> */}
         <div className='flex gap-3' style={{ marginTop: '5%', marginBottom: '5%', justifyContent: 'space-between', gap: '5%'}}>
           <TextField className="flex-grow" required id="firstName" name="firstName" label="First Name" variant="outlined"/>
           <TextField className="flex-grow" required id="lastName" name="lastName" label="Last Name" variant="outlined"/>
