@@ -77,9 +77,12 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
         setIsLoading(false);
       }
     };
-    sendMessage();
-    setInputValue("");
-    setContextValue("");
+
+    if (inputValue !== "") {
+      sendMessage();
+      setInputValue("");
+      setContextValue("");
+    }
   };
 
   useEffect(() => {
