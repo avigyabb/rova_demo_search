@@ -227,10 +227,6 @@ class FullDocumentRetriever(BaseRetriever):
             file = UploadedFile.objects.get(filename=file_name, user_id=self.user_id)
             file_id = file.id
 
-            # Ensure file is selected
-            if (file_id not in self.selectedFileIds):
-                return [Document(page_content="Could not find " + file_name + ".\n")]
-
             # From collection, concatenate the first k chunks of the file
             result = collection.get(
                 where={ "$and": [
@@ -240,6 +236,8 @@ class FullDocumentRetriever(BaseRetriever):
             content = " ".join(result['documents'][:num_chunks])
             return [Document(page_content="Filename: " + file_name + "\n" + "Content: " + content + "\n")]
         except UploadedFile.DoesNotExist:
+            return [Document(page_content="Could not find " + file_name + ".\n")]
+        except Exception as e:
             return [Document(page_content="Could not find " + file_name + ".\n")]
         
     def _get_relevant_documents(self, file_name: str):
