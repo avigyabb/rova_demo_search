@@ -212,6 +212,39 @@ class Neo4jRetriever(BaseRetriever):
     def _get_relevant_documents(self, query: str):
         return self._retrieve_similar_documents_(query)
 
+
+# FullDocumentRetriever Class
+class FullDocumentRetriever(BaseRetriever):
+    selectedFileIds: list
+    user_id: int
+
+    def update_selection(self, selectedFileIds):
+        self.selectedFileIds = selectedFileIds
+    
+    def _retrieve_full_document_(self, file_name, num_chunks = 5):
+        # Grab the id for the file_name in the UploadedFile model
+        try:
+            file = UploadedFile.objects.get(filename=file_name, user_id=self.user_id)
+            file_id = file.id
+
+            # Ensure file is selected
+            if (file_id not in self.selectedFileIds):
+                return [Document(page_content="Could not find " + file_name + ".\n")]
+
+            # From collection, concatenate the first k chunks of the file
+            result = collection.get(
+                where={ "$and": [
+                    {"source_id": {"$eq": file_id}},
+                    {"user_id": {"$eq": self.user_id}}]
+                })
+            content = " ".join(result['documents'][:num_chunks])
+            return [Document(page_content="Filename: " + file_name + "\n" + "Content: " + content + "\n")]
+        except UploadedFile.DoesNotExist:
+            return [Document(page_content="Could not find " + file_name + ".\n")]
+        
+    def _get_relevant_documents(self, file_name: str):
+        return self._retrieve_full_document_(file_name)
+    
 class ToolWrapper:
     def __init__(self):
         pass
@@ -231,7 +264,14 @@ class ToolWrapper:
             "search_graph",
             "Searches across a knowledge graph of documents to reveal relationships and information useful for answering broad queries. Useful for planning long-form answers and pulling pieces of evidence from multiple documents."
         )
-        self.tools = [self.simple_search_tool] # self.graph_retrieval_tool 
+        file_retriever = FullDocumentRetriever(selectedFileIds=[], user_id=user_id)
+        file_retriever.update_selection(selectedFileIds)
+        self.file_retrieval_tool = create_retriever_tool(
+            file_retriever,
+            "fetch_full_document",
+            "Fetches the entire contents of a document by its name, or up to 10 pages if the document is longer than 10 pages. Useful for getting detailed information from a specific document when the user mentions the file name in their query."
+        )
+        self.tools = [self.simple_search_tool, self.file_retrieval_tool] # self.graph_retrieval_tool 
         return self.tools
 
 tools = ToolWrapper()
@@ -289,27 +329,25 @@ class ChromaManager():
     def handle_graph_conversion(self, chunks, idx):
         asyncio.run_coroutine_threadsafe(self.convert_to_graph_documents_and_process(chunks, idx), self.loop)
 
+    # Function to parse file and return its content
+    def parse_file(self, file_path):
+        content = ""
+        if file_path.endswith(".pdf"):
+            content = read_pdf(file_path)
+            if not content:
+                images = convert_from_path(file_path)
+                for img in images:
+                    text = pytesseract.image_to_string(img)
+                    content += text
+        elif file_path.endswith(".docx"):
+            content = read_docx(file_path)
+        return content
+
     # Function to parse and store files in ChromaDB
     def parse_and_store_files(self, file_paths, ids, user_id):
         documents = []
         for idx, file_path in enumerate(file_paths):
-            if file_path.endswith(".pdf"):
-                content = read_pdf(file_path)
-                if not content:
-                    images = convert_from_path(file_path)
-                    for img in images:
-                        text = pytesseract.image_to_string(img)
-                        content += text
-            elif file_path.endswith(".docx"):
-                content = read_docx(file_path)
-            elif file_path.endswith(".py") or file_path.endswith(".js"):
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    content = file.read()
-                doc_id = f"{ids[idx]}_0"
-                documents.append({"id": doc_id, "source_id": ids[idx], "content": content, "user_id": user_id})
-                continue  # Skip chunking and graph conversion for these files
-            else:
-                continue
+            content = self.parse_file(file_path)
             chunks = chunk_text(content)
             for jdx, chunk in enumerate(chunks):
                 doc_id = f"{ids[idx]}_{jdx}"
