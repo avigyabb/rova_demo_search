@@ -235,6 +235,8 @@ class FullDocumentRetriever(BaseRetriever):
             file = UploadedFile.objects.get(filename=file_name, user_id=self.user_id)
             file_id = file.id
 
+            document_handler.retrieved_documents[self.user_id].append({"name" : "[ENTIRE FILE] " + file_name, "content" : ""})
+
             # From collection, concatenate the first k chunks of the file
             result = collection.get(
                 where={ "$and": [
@@ -276,7 +278,7 @@ class ToolWrapper:
         self.file_retrieval_tool = create_retriever_tool(
             file_retriever,
             "fetch_full_document",
-            "Fetches the entire contents of an uploaded document by its name. Useful for retrieving an entire document when the user mentions a file or file name in their query."
+            "Fetches the entire content of an uploaded document given the filename or a description of the filename. Useful when the user mentions a specific file or upload in their query."
         )
         self.tools = [self.simple_search_tool, self.file_retrieval_tool] # self.graph_retrieval_tool 
         return self.tools
