@@ -103,3 +103,18 @@ def extract_questions(client, file_path, context, provided_questions):
             question["description"] = context + " " + question["description"]
     print("QUESTIONS: ", questions)
     return questions
+
+
+# Given an approximate file name, return the most likely file name from the list using the client
+def get_file_name_from_guess(client, file_guess, file_names):
+    completion = client.chat.completions.create(
+    model="gpt-4-1106-preview",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant that helps users find the most likely file name from a list given an initial guess. \
+         Please return the exact file name and nothing else besides the file name. If there is no good match, you may output 'no_match'."},
+        {"role": "user", "content": "Given the following file name, return the most likely file name from the list: {} \n\ File names: {}".format(file_guess, file_names)}
+    ],
+    response_format={"type": "text"}
+    )
+    file_name = completion.choices[0].message.content
+    return file_name

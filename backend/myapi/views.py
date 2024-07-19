@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 import chromadb
 from langchain_openai import OpenAIEmbeddings
 from .chat import respond_to_message, draft_from_questions, format_data, document_handler, extract_data_using_chatgpt
-from .utils import get_openai_embeddings, read_pdf, read_docx, chunk_text, extract_questions, clear_neo4j
+from .utils import get_openai_embeddings, read_pdf, read_docx, chunk_text, extract_questions, clear_neo4j, get_file_name_from_guess
 
 from openai import OpenAI
 from io import BytesIO
@@ -220,6 +220,14 @@ class FullDocumentRetriever(BaseRetriever):
 
     def update_selection(self, selectedFileIds):
         self.selectedFileIds = selectedFileIds
+
+    # Given an approximate file name, return the most likely file name from the uploaded files from the user
+    def _get_file_name_(self, file_guess):
+        # Get the list of all file names from the user
+        file_names = UploadedFile.objects.filter(user_id=self.user_id).values_list('filename', flat=True)
+        
+        # Use GPT to find the most likely file name 
+        return get_file_name_from_guess(client, file_guess, file_names)
     
     def _retrieve_full_document_(self, file_name, num_chunks = 5):
         # Grab the id for the file_name in the UploadedFile model
@@ -240,7 +248,8 @@ class FullDocumentRetriever(BaseRetriever):
         except Exception as e:
             return [Document(page_content="Could not find " + file_name + ".\n")]
         
-    def _get_relevant_documents(self, file_name: str):
+    def _get_relevant_documents(self, file_guess: str):
+        file_name = self._get_file_name_(file_guess)
         return self._retrieve_full_document_(file_name)
     
 class ToolWrapper:
@@ -267,7 +276,7 @@ class ToolWrapper:
         self.file_retrieval_tool = create_retriever_tool(
             file_retriever,
             "fetch_full_document",
-            "Fetches the entire contents of a document by its name, or up to 10 pages if the document is longer than 10 pages. Useful for getting detailed information from a specific document when the user mentions the file name in their query."
+            "Fetches the entire contents of an uploaded document by its name. Useful for retrieving an entire document when the user mentions a file or file name in their query."
         )
         self.tools = [self.simple_search_tool, self.file_retrieval_tool] # self.graph_retrieval_tool 
         return self.tools
