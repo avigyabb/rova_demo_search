@@ -266,7 +266,10 @@ class SelectedDocumentsRetriever(BaseRetriever):
     def _get_relevant_documents(self, query: str):
         # Take the list of selectedFileIds and user_id and return the corresponding document names
         file_names = UploadedFile.objects.filter(id__in=self.selectedFileIds, user_id=self.user_id).values_list('filename', flat=True)
-        return [Document(page_content="Selected files: " + ', '.join(file_names) + "\n")]
+        file_tags = UploadedFile.objects.filter(id__in=self.selectedFileIds, user_id=self.user_id).values_list('file_organization', flat=True)
+        files = [file_names[i] + " (tag: " + file_tags[i] + ")" for i in range(len(file_names))]
+
+        return [Document(page_content="Selected files: " + ', '.join(files) + "\n")]
     
 class ToolWrapper:
     def __init__(self):
