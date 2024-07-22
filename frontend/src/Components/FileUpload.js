@@ -242,7 +242,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
                     {focusedFile !== file.id && (<span title={file.filename} style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>{file.filename}</span>)}
                     {focusedFile === file.id && ( 
                     <>
-                      <span title={file.filename} style={{ flex: 1, overflow: 'hidden', textOverflow: 'wrap', whiteSpace: 'normal', fontSize: '14px' }}>{file.filename}</span>
+                      <span title={file.filename} style={{ flex: 1, overflow: 'hidden', textOverflow: 'wrap', whiteSpace: 'normal', fontSize: '14px', wordBreak: 'break-all' }}>{file.filename}</span>
                         <FaTags
                           size={22}
                           className='tags-btn'

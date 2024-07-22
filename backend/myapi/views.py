@@ -264,7 +264,7 @@ class ToolWrapper:
         self.simple_search_tool = create_retriever_tool(
             retriever,
             "search_documents",
-            "Searches and returns excerpts from the documents that have uploaded by the user. Useful for extracting details about specific entities, typically only those contained within a single document."
+            "Searches and returns excerpts from the documents that have uploaded by the user. Useful for extracting details about specific entities."
         )
         graph_retriever = Neo4jRetriever(k=10, selectedFileIds=[])
         graph_retriever.update_selection(selectedFileIds)
