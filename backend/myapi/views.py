@@ -253,6 +253,20 @@ class FullDocumentRetriever(BaseRetriever):
     def _get_relevant_documents(self, file_guess: str):
         file_name = self._get_file_name_(file_guess)
         return self._retrieve_full_document_(file_name)
+
+
+# SelectedDocumentsRetriever Class
+class SelectedDocumentsRetriever(BaseRetriever):
+    selectedFileIds: list
+    user_id: int
+
+    def update_selection(self, selectedFileIds):
+        self.selectedFileIds = selectedFileIds
+
+    def _get_relevant_documents(self, query: str):
+        # Take the list of selectedFileIds and user_id and return the corresponding document names
+        file_names = UploadedFile.objects.filter(id__in=self.selectedFileIds, user_id=self.user_id).values_list('filename', flat=True)
+        return [Document(page_content="Selected files: " + ', '.join(file_names) + "\n")]
     
 class ToolWrapper:
     def __init__(self):
@@ -264,7 +278,7 @@ class ToolWrapper:
         self.simple_search_tool = create_retriever_tool(
             retriever,
             "search_documents",
-            "Searches and returns excerpts from the documents that have uploaded by the user. Useful for extracting details about specific entities."
+            "Searches and returns excerpts from the documents and files that have uploaded by the user. Useful for extracting details about specific entities."
         )
         graph_retriever = Neo4jRetriever(k=10, selectedFileIds=[])
         graph_retriever.update_selection(selectedFileIds)
@@ -278,9 +292,17 @@ class ToolWrapper:
         self.file_retrieval_tool = create_retriever_tool(
             file_retriever,
             "fetch_full_document",
-            "Fetches the entire content of an uploaded document given the filename or a description of the filename. Useful when the user mentions a specific file or upload in their query."
+            "Fetches the entire content of an uploaded document or link given the filename, url, or description of it. Useful when the user mentions a specific file, url, upload in their query."
         )
-        self.tools = [self.simple_search_tool, self.file_retrieval_tool] # self.graph_retrieval_tool 
+        uploads_retriever = SelectedDocumentsRetriever(selectedFileIds=[], user_id=user_id)
+        uploads_retriever.update_selection(selectedFileIds)
+        self.uploads_retrieval_tool = create_retriever_tool(
+            uploads_retriever,
+            "fetch_selected_documents",
+            "Fetches the names of all selected documents when query is 'documents'. Useful when a user vaguely mentions an upload without specifiying the document."
+        )
+
+        self.tools = [self.simple_search_tool, self.file_retrieval_tool, self.uploads_retrieval_tool] # self.graph_retrieval_tool 
         return self.tools
 
 tools = ToolWrapper()
