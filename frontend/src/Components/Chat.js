@@ -15,6 +15,13 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
   const [shownSourcesIndex, setShownSourcesIndex] = useState(null);
   const [context, setContext] = useState(false);
   const [contextValue, setContextValue] = useState("")
+  const [showSuggestedMessages, setShowSuggestedMessages] = useState(false);
+  
+  const suggestedMessages = [
+    "Give me a brief summary of one of the selected documents.",
+    "Use the uploaded information to tell me our mission statement.",
+    "What environmental work has our organization done in the past?"
+  ];
 
   const fetchChat = async () => {
     try {
@@ -29,6 +36,13 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
       });
       const result = await response.data;
       setChatLog(result);
+      
+      // if chat log is empty, set showSuggestedMessages to true
+      if (result.length === 0) {
+        setShowSuggestedMessages(true);
+      } else {
+        setShowSuggestedMessages(false);
+      }
     } catch (error) {
       console.error('Error fetching chat:', error);
     }
@@ -53,6 +67,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
     const accessToken = localStorage.getItem('accessToken');
     event.preventDefault();
     const sendMessage = async () => {
+      setShowSuggestedMessages(false);
       try {
         setIsLoading(true);
         if (!context) {
@@ -84,6 +99,36 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
       setContextValue("");
     }
   };
+
+  const sendSingleMessage = async (accessToken, inputVal) => {
+    setShowSuggestedMessages(false);
+    try {
+      setIsLoading(true);
+      const userChat = { user_role: "user", message: inputVal };
+      setChatLog((prevChatLog) => [...prevChatLog, userChat]);
+      await axios.post(REACT_APP_API_URL + "send-message/", {
+        body: inputVal,
+        session_id: selectedSession.id,
+        file_ids: JSON.stringify(selectedFileIds)
+      }, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        }
+      });
+      fetchChat(selectedSession.id)
+      setIsLoading(false)
+    } catch (error) {
+      console.error(error);
+      setIsLoading(false);
+    }
+  };
+  
+  const handleSuggestedMessageClick = (message) => {
+    const accessToken = localStorage.getItem('accessToken');
+    sendSingleMessage(accessToken, message);
+    setInputValue("");
+    setContextValue("");
+  }; 
 
   useEffect(() => {
     const updateWidth = () => {
@@ -134,6 +179,7 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
 
   const handleTyping = (event) => {
     setInputValue(event.target.value);
+    // setShowSuggestedMessages(false);
   };
 
   const handleContextTyping = (event) => {
@@ -265,83 +311,97 @@ export default function Chat({ selectedSession, selectedFileIds, setSelectedFile
             )}
           </div>
         </div>
-          <form className="flex-none p-6 pt-0">
-            <div style={{ position: "relative" }}>
-              <div className="flex border" style={{ alignItems: "center", borderRadius: "20px"}}>
+        <form className="flex-none p-6 pt-0" onSubmit={handleSubmit}>
+          {showSuggestedMessages && (
+            <div className="flex justify-around mb-4 gap-4">
+              {suggestedMessages.map((msg, index) => (
                 <button
-                  className = "flex absolute left-1 blue w-8 h-8 rounded-full"
-                  style = {{alignItems : "center", justifyContent : "center", zIndex : 10}}
-                  disabled = {isLoading}
-                  onClick = {contextChange}
-                  >
-                    {context ? "\\/" : "/\\"}
+                  key={index}
+                  type="button"
+                  className="bg-gray-200 p-2 rounded mb-2 hover:bg-gray-300"
+                  onClick={() => handleSuggestedMessageClick(msg)}
+                >
+                  {msg}
                 </button>
-                {context ?
-                <div className = "flex flex-col flex-grow">
-                  <textarea
-                    id = "inputArea"
-                    type = "text"
-                    className = "flex-grow px-4 py-2 focus:outline-none"
-                    disabled = {isLoading}
-                    style = {{borderBottom : "1px solid", fontFamily : "'Cerebri Sans', sans-serif", paddingLeft : "40px", paddingRight : "100px", backgroundColor : "#f0f0f0"}}
-                    rows = {1}
-                    placeholder = "Add context here..."
-                    value = {contextValue}
-                    onChange = {handleContextTyping}
-                  />
-                  <div className = "flex flex-row relative items-center">
-                    <textarea
-                      id="inputArea"
-                      type="text"
-                      className="flex-grow px-4 py-2 focus:outline-none"
-                      disabled={isLoading}
-                      style={{ fontFamily: "'Cerebri Sans', sans-serif", paddingLeft : "40px", paddingRight : "100px", backgroundColor: '#f0f0f0' }}
-                      rows={inputRows}
-                      placeholder="Add questions here..."
-                      value={inputValue}
-                      onChange={handleTyping}
-                    />
-                    {inputValue.length == 0 && (
-                    <label className = "upload-template absolute right-[100px]">
-                      + Upload Template
-                      <input
-                        type="file"
-                        multiple
-                        onChange = {handleTemplateUpload}
-                        style = {{display : "none"}}
-                      >
-                      </input>
-                    </label>
-                    )}
-                  </div>
-                </div> :
+              ))}
+            </div>
+          )}
+          <div style={{ position: "relative" }}>
+            <div className="flex border" style={{ alignItems: "center", borderRadius: "20px"}}>
+              <button
+                className = "flex absolute left-1 blue w-8 h-8 rounded-full"
+                style = {{alignItems : "center", justifyContent : "center", zIndex : 10}}
+                disabled = {isLoading}
+                onClick = {contextChange}
+                >
+                  {context ? "\\/" : "/\\"}
+              </button>
+              {context ?
+              <div className = "flex flex-col flex-grow">
                 <textarea
                   id = "inputArea"
                   type = "text"
                   className = "flex-grow px-4 py-2 focus:outline-none"
                   disabled = {isLoading}
-                  style = {{fontFamily : "'Cerebri Sans', sans-serif", borderRadius : "20px", paddingLeft : "40px", paddingRight : "100px", backgroundColor : "#f0f0f0"}}
-                  rows = {inputRows}
-                  placeholder = "Ask a question..."
-                  value = {inputValue}
-                  onChange = {handleTyping}
+                  style = {{borderBottom : "1px solid", fontFamily : "'Cerebri Sans', sans-serif", paddingLeft : "40px", paddingRight : "100px", backgroundColor : "#f0f0f0"}}
+                  rows = {1}
+                  placeholder = "Add context here..."
+                  value = {contextValue}
+                  onChange = {handleContextTyping}
                 />
-                }                
-                <button
-                  type="submit"
-                  className="flex absolute right-1 m-auto px-3 py-1 font-semibold focus:outline-none transition-colors duration-300"
-                  style={{ alignItems: "center", color: 'white', borderRadius: "20px", backgroundColor: "black" }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = "gray"}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = "black"}
-                  disabled={isLoading}
-                  onClick = {handleSubmit}
+                <div className = "flex flex-row relative items-center">
+                  <textarea
+                    id="inputArea"
+                    type="text"
+                    className="flex-grow px-4 py-2 focus:outline-none"
+                    disabled={isLoading}
+                    style={{ fontFamily: "'Cerebri Sans', sans-serif", paddingLeft : "40px", paddingRight : "100px", backgroundColor: '#f0f0f0' }}
+                    rows={inputRows}
+                    placeholder="Add questions here..."
+                    value={inputValue}
+                    onChange={handleTyping}
+                  />
+                  {inputValue.length == 0 && (
+                  <label className = "upload-template absolute right-[100px]">
+                    + Upload Template
+                    <input
+                      type="file"
+                      multiple
+                      onChange = {handleTemplateUpload}
+                      style = {{display : "none"}}
+                    >
+                    </input>
+                  </label>
+                  )}
+                </div>
+              </div> :
+              <textarea
+                id = "inputArea"
+                type = "text"
+                className = "flex-grow px-4 py-2 focus:outline-none"
+                disabled = {isLoading}
+                style = {{fontFamily : "'Cerebri Sans', sans-serif", borderRadius : "20px", paddingLeft : "40px", paddingRight : "100px", backgroundColor : "#f0f0f0"}}
+                rows = {inputRows}
+                placeholder = "Ask a question..."
+                value = {inputValue}
+                onChange = {handleTyping}
+              />
+              }
+              <button
+                type="submit"
+                className="flex absolute right-1 m-auto px-3 py-1 font-semibold focus:outline-none transition-colors duration-300"
+                style={{ alignItems: "center", color: 'white', borderRadius: "20px", backgroundColor: "black" }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = "gray"}
+                onMouseLeave={(e) => e.target.style.backgroundColor = "black"}
+                disabled={isLoading}
+                onClick = {handleSubmit}
                 >
-                  Send
-                  <FaPaperPlane size={14} style={{ marginLeft: "8px" }} />
-                </button>
-              </div>
+                Send
+                <FaPaperPlane size={14} style={{ marginLeft: "8px" }} />
+              </button>
             </div>
-          </form>
+          </div>
+        </form>
       </div>
     </div>
   );
