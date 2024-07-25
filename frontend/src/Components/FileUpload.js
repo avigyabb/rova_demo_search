@@ -208,11 +208,20 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
                   key={file.id}
                   onMouseEnter={() => setFocusedFile(file.id)}
                   onMouseLeave={() => setFocusedFile(null)}
+                  onClick={(event) => {
+                    // Prevent the onClick from triggering when the delete or tag button is clicked
+                    if (event.target.tagName !== 'INPUT' && event.target.tagName !== 'BUTTON' &&
+                    !event.target.classList.contains('delete-btn') && !event.target.classList.contains('tags-btn') &&
+                    !event.target.closest('.tags-btn')) {
+                      toggleFileSelection(file.id);
+                    }
+                  }}
                   style={{
                     backgroundColor: focusedFile === file.id && 'lightgray',
                     padding: '10px',
                     borderRadius: '5px',
-                    marginBottom: '5px'
+                    marginBottom: '5px',
+                    cursor: 'pointer', // Add cursor pointer to indicate clickable area
                   }}
                 >
                   {focusedFileOrganization !== file.id && (
@@ -237,12 +246,18 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
                       type="checkbox"
                       checked={selectedFileIds.includes(file.id)}
                       onChange={() => toggleFileSelection(file.id)}
-                      style={{ marginRight: '10px', transform: 'scale(1.3)' }}
+                      style={{ marginRight: '10px', transform: 'scale(1.3)', cursor: 'pointer'}}
                     />
-                    {focusedFile !== file.id && (<span title={file.filename} style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>{file.filename}</span>)}
-                    {focusedFile === file.id && ( 
-                    <>
-                      <span title={file.filename} style={{ flex: 1, overflow: 'hidden', textOverflow: 'wrap', whiteSpace: 'normal', fontSize: '14px', wordBreak: 'break-all' }}>{file.filename}</span>
+                    {focusedFile !== file.id && (
+                      <span title={file.filename} style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '14px' }}>
+                        {file.filename}
+                      </span>
+                    )}
+                    {focusedFile === file.id && (
+                      <>
+                        <span title={file.filename} style={{ flex: 1, overflow: 'hidden', textOverflow: 'wrap', whiteSpace: 'normal', fontSize: '14px', wordBreak: 'break-all' }}>
+                          {file.filename}
+                        </span>
                         <FaTags
                           size={22}
                           className='tags-btn'
