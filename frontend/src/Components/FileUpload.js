@@ -195,7 +195,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
     }}>
       <div style = {{display : "flex", flexDirection : "column", height : "100%" }}>
         <label className="add-file-btn" onClick={() => setShowUploadPopup(true)}>
-        <FaPlus style={{ marginRight: '8px' }}/>
+          <FaPlus style={{ marginRight: '8px' }}/>
           Upload Files
         </label>
         <div style={{ marginTop: '10px', flexGrow : 1, overflowY : "auto" }}>
@@ -217,7 +217,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
                     }
                   }}
                   style={{
-                    backgroundColor: focusedFile === file.id && 'lightgray',
+                    backgroundColor: selectedFileIds.includes(file.id) ? 'lightblue' : (focusedFile === file.id ? 'lightgray' : 'transparent'),
                     padding: '10px',
                     borderRadius: '5px',
                     marginBottom: '5px',
@@ -289,7 +289,7 @@ const FileUploadComponent = ({ selectedSession, selectedFileIds, setSelectedFile
 
         <div style={{ position : "sticky", bottom: '0', width: '100%', margin: '20px' }}>
           <label className="custom-file-input">
-            {isLoading && (
+          {isLoading && (
                 <div /* style={{color: 'white'}} */ >
                 <CircularProgress color="inherit"/>
               </div>
