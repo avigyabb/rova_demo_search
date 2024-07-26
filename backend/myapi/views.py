@@ -269,6 +269,9 @@ class SelectedDocumentsRetriever(BaseRetriever):
         file_tags = UploadedFile.objects.filter(id__in=self.selectedFileIds, user_id=self.user_id).values_list('file_organization', flat=True)
         files = [file_names[i] + " (tag: " + file_tags[i] + ")" for i in range(len(file_names))]
 
+        if len(files) == 0:
+            return [Document(page_content="No files selected.\n")]
+
         return [Document(page_content="Selected files: " + ', '.join(files) + "\n")]
     
 class ToolWrapper:
