@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'myapi',
     'vectordb',
-    'sslserver'
+    'sslserver',
 ]
 
 REST_FRAMEWORK = {
@@ -94,10 +94,10 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 # these three lines swap the stdlib sqlite3 lib with the pysqlite3 package
-__import__('pysqlite3')
+# __import__('pysqlite3')
 import sys
 import os
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+# sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 DATABASES = {
     "default": {

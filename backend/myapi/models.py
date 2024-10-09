@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.contrib import admin
 
 User = get_user_model()
 
@@ -33,3 +34,7 @@ class ChatHistory(models.Model):
 
     def __str__(self):
         return self.user_role
+    
+admin.site.register(UploadedFile)
+admin.site.register(ChatSession)
+admin.site.register(ChatHistory)

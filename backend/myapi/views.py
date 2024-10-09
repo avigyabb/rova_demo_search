@@ -57,6 +57,23 @@ from asgiref.sync import sync_to_async
 import json
 import asyncio
 
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+def get_user_by_id(user_id):
+    try:
+        return User.objects.get(id=user_id)
+    except:
+        print("User not found")
+
+# Retrieve user by user_id
+def get_user_by_id(user_id):
+    try:
+        user = User.objects.get(id=user_id)
+        return user
+    except User.DoesNotExist:
+        return None
+
 class CreateUserView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
@@ -87,7 +104,8 @@ class LoginView(APIView):
 os.environ["NEO4J_URI"] = "neo4j+s://497bdb9e.databases.neo4j.io"
 os.environ["NEO4J_USERNAME"] = "neo4j"
 os.environ["NEO4J_PASSWORD"] = "aRT0PlT235Yy4sM8dEAvtLiQATPt1U83en1gyMX5t8s"
-os.environ["OPENAI_API_KEY"] = "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"
+# put your API key here
+os.environ["OPENAI_API_KEY"] = ""
 
 NODES = ["Person", "County", "Organization", "Initiative", "Grant", "Demography", "Benificiaries"]
 RELATIONSHIPS = ["LOCATED_IN", "HELPS", "FUNDING_FOR", "SUPPORTING_RESEARCH"]
@@ -125,6 +143,7 @@ class ChromaRetriever(BaseRetriever):
 
     # Retrieve similar documents
     def _retrieve_similar_documents_(self, query, user_id):
+        print('Retrieve similar documents')
         query_embedding = get_openai_embeddings([query], embeddings_client)[0]
         if(len(self.selectedFileIds) > 0):
             results = collection.query(query_embedding, n_results=self.k, where={
@@ -135,6 +154,8 @@ class ChromaRetriever(BaseRetriever):
             })
         else:
             results = [] #collection.query(query_embedding, n_results=self.k)
+        print('results')
+        print(results)
         if(len(results) > 0):
             for index in range(len(results["documents"][0])):
                 document_content = results["documents"][0][index]
@@ -150,67 +171,67 @@ class ChromaRetriever(BaseRetriever):
     def _get_relevant_documents(self, query: str):
         return self._retrieve_similar_documents_(query, self.user_id)
 
-class Neo4jRetriever(BaseRetriever):
+# class Neo4jRetriever(BaseRetriever):
 
-    k: int
-    selectedFileIds: list
+#     k: int
+#     selectedFileIds: list
 
-    def update_selection(self, selectedFileIds):
-        self.selectedFileIds = selectedFileIds
-    def _get_neighborhood_(self, page_content):    
-     with driver.session() as session:
-        result = session.run("""
-        MATCH (n:Initiative)
-        WHERE n.text = $pageContent AND n.source_id IN $source_ids
-        OPTIONAL MATCH (n)-[r]-(m)
-        RETURN 
-            labels(n) AS nodeLabels,
-            n.text AS nodeText,
-            n.id AS nodeId,
-            collect({
-                relationType: type(r),
-                neighborLabels: labels(m),
-                neighborText: m.text,
-                neighborId: m.id
-            }) AS neighborhood
-        """, {'source_ids': self.selectedFileIds, 'pageContent': page_content})
-        # Immediately consume the results in a list comprehension or similar structure
-        neighborhood_data = [{
-            "nodeLabels": record["nodeLabels"],
-            "nodeText": record["nodeText"],
-            "nodeId": record["nodeId"],
-            "neighborhood": record["neighborhood"]
-        } for record in result]
-        return neighborhood_data
+#     def update_selection(self, selectedFileIds):
+#         self.selectedFileIds = selectedFileIds
+#     def _get_neighborhood_(self, page_content):    
+#      with driver.session() as session:
+#         result = session.run("""
+#         MATCH (n:Initiative)
+#         WHERE n.text = $pageContent AND n.source_id IN $source_ids
+#         OPTIONAL MATCH (n)-[r]-(m)
+#         RETURN 
+#             labels(n) AS nodeLabels,
+#             n.text AS nodeText,
+#             n.id AS nodeId,
+#             collect({
+#                 relationType: type(r),
+#                 neighborLabels: labels(m),
+#                 neighborText: m.text,
+#                 neighborId: m.id
+#             }) AS neighborhood
+#         """, {'source_ids': self.selectedFileIds, 'pageContent': page_content})
+#         # Immediately consume the results in a list comprehension or similar structure
+#         neighborhood_data = [{
+#             "nodeLabels": record["nodeLabels"],
+#             "nodeText": record["nodeText"],
+#             "nodeId": record["nodeId"],
+#             "neighborhood": record["neighborhood"]
+#         } for record in result]
+#         return neighborhood_data
 
         
-    # Retrieve similar documents
-    def _retrieve_similar_documents_(self, query):
+#     # Retrieve similar documents
+#     def _retrieve_similar_documents_(self, query):
 
-        vector_index = Neo4jVector.from_existing_graph(
-            url = os.environ["NEO4J_URI"], 
-            username = os.environ["NEO4J_USERNAME"],
-            password = os.environ["NEO4J_PASSWORD"],
-            database="neo4j",
-            embedding=embeddings_client,
-            search_type="hybrid",
-            node_label="Initiative", # Central node
-            text_node_properties=PROPS,
-            embedding_node_property="embedding",
-        )
+#         vector_index = Neo4jVector.from_existing_graph(
+#             url = os.environ["NEO4J_URI"], 
+#             username = os.environ["NEO4J_USERNAME"],
+#             password = os.environ["NEO4J_PASSWORD"],
+#             database="neo4j",
+#             embedding=embeddings_client,
+#             search_type="hybrid",
+#             node_label="Initiative", # Central node
+#             text_node_properties=PROPS,
+#             embedding_node_property="embedding",
+#         )
 
-        result = vector_index.similarity_search(query, self.k)
-        documents = []
-        for record in result:
-            text = record.page_content.split("text:", 1)[1].strip()
-            records = self._get_neighborhood_(text) # gets 1-hop neighbors, next step could be to get multi-hop neighbors (neighbors of neighbors)
-            for record in records:
-                out = format_data(record['nodeLabels'], record['nodeId'],record['nodeText'], record['neighborhood'])
-                documents.append(Document(page_content=out))
-        return documents
+#         result = vector_index.similarity_search(query, self.k)
+#         documents = []
+#         for record in result:
+#             text = record.page_content.split("text:", 1)[1].strip()
+#             records = self._get_neighborhood_(text) # gets 1-hop neighbors, next step could be to get multi-hop neighbors (neighbors of neighbors)
+#             for record in records:
+#                 out = format_data(record['nodeLabels'], record['nodeId'],record['nodeText'], record['neighborhood'])
+#                 documents.append(Document(page_content=out))
+#         return documents
 
-    def _get_relevant_documents(self, query: str):
-        return self._retrieve_similar_documents_(query)
+#     def _get_relevant_documents(self, query: str):
+#         return self._retrieve_similar_documents_(query)
 
 
 # FullDocumentRetriever Class
@@ -223,8 +244,11 @@ class FullDocumentRetriever(BaseRetriever):
 
     # Given an approximate file name, return the most likely file name from the uploaded files from the user
     def _get_file_name_(self, file_guess):
+        print('getfilename')
         # Get the list of all file names from the user
-        file_names = UploadedFile.objects.filter(user_id=self.user_id).values_list('filename', flat=True)
+        user = get_user_by_id(self.user_id)
+        file_names = UploadedFile.objects.filter(user=user).values_list('filename', flat=True)
+        print(file_names)
         
         # Use GPT to find the most likely file name 
         return get_file_name_from_guess(client, file_guess, file_names)
@@ -232,7 +256,11 @@ class FullDocumentRetriever(BaseRetriever):
     def _retrieve_full_document_(self, file_name, num_chunks = 5):
         # Grab the id for the file_name in the UploadedFile model
         try:
-            file = UploadedFile.objects.get(filename=file_name, user_id=self.user_id)
+            print('retrievefulldocument')
+            try:
+                file = UploadedFile.objects.get(filename=file_name, user_id=self.user_id)
+            except Exception as e:
+                print(e)
             file_id = file.id
 
             document_handler.retrieved_documents[self.user_id].append({"name" : "[ENTIRE FILE] " + file_name, "content" : ""})
@@ -278,6 +306,8 @@ class ToolWrapper:
     def __init__(self):
         pass
     def update(self, selectedFileIds, user_id): 
+        print('updatefunc')
+        print(selectedFileIds)
         retriever = ChromaRetriever(k=10, selectedFileIds=[], user_id=user_id)
         retriever.update_selection(selectedFileIds)
         # tools
@@ -286,13 +316,13 @@ class ToolWrapper:
             "search_documents",
             "Searches and returns excerpts from the documents and files that have uploaded by the user. Useful for extracting details about specific entities."
         )
-        graph_retriever = Neo4jRetriever(k=10, selectedFileIds=[])
-        graph_retriever.update_selection(selectedFileIds)
-        self.graph_retrieval_tool = create_retriever_tool(
-            graph_retriever,
-            "search_graph",
-            "Searches across a knowledge graph of documents to reveal relationships and information useful for answering broad queries. Useful for planning long-form answers and pulling pieces of evidence from multiple documents."
-        )
+        # graph_retriever = Neo4jRetriever(k=10, selectedFileIds=[])
+        # graph_retriever.update_selection(selectedFileIds)
+        # self.graph_retrieval_tool = create_retriever_tool(
+        #     graph_retriever,
+        #     "search_graph",
+        #     "Searches across a knowledge graph of documents to reveal relationships and information useful for answering broad queries. Useful for planning long-form answers and pulling pieces of evidence from multiple documents."
+        # )
         file_retriever = FullDocumentRetriever(selectedFileIds=[], user_id=user_id)
         file_retriever.update_selection(selectedFileIds)
         self.file_retrieval_tool = create_retriever_tool(
@@ -572,7 +602,9 @@ class LlmModelView(APIView):
 
         chat_history = ChatHistory(user = request.user, user_role="user", message=message, session=chat_session)
         chat_history.save()
-
+        
+        print('respond to message')
+        print(selectedFileIds)
         response = respond_to_message(llm, message, tools.update(selectedFileIds, request.user.id), chat_session, request.user)
 
         # Save response in chat history

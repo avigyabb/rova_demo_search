@@ -47,3 +47,6 @@ docker run \
 
 # myapi_ table not found
 - commment out uploads in the get function
+
+# ModuleNotFoundError: No module named 'module_name'
+- run python3 commands
